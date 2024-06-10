@@ -699,6 +699,35 @@ def pyrosetta_to_poly(pose):
 
     return poly(polymer)
 
+def pdb_to_poly(pose,residues):
+    polymer = []
+    for ii in residues:
+        r = pose.residue(ii)
+        n = []
+        c = []
+
+        for a in range(1,r.natoms()+1):
+            name = r.atom_name(a)
+
+            #only the real heavy atoms
+            if "H" in name or "V" in name:
+                continue;
+
+            #print(a,r.atom_name(a),r.xyz(a))
+
+            n.append(name)
+            c.append(np.array(r.xyz(a)))
+
+        c = np.array(c)
+        #print(r.name(),n,c)
+        #print(r)
+        #print(r.name3())
+        m = mono(r.name3(),c,n)
+        #print(m.ring_atom)
+        polymer.append(m)
+
+    return poly(polymer)
+
 if __name__ == '__main__':
 
     #simple test of monos and polys
