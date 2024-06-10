@@ -29,9 +29,11 @@ class mono():
 
 
     """
-    def __init__(self,name,coor,atom_names,BOND_CUTOFF=1.65,ATOM_LIST=['O','C','N','S','P','X']):
+    def __init__(self,name,name3,long_name,coor,atom_names,BOND_CUTOFF=1.65,ATOM_LIST=['O','C','N','S','P','X']):
         #self.is_sia = is_sia
         self.name = name
+        self.name3 = name3
+        self.long_name = long_name
         self.coor = coor
         #print(self.coor)
         self.atom_names = atom_names
@@ -73,7 +75,7 @@ class mono():
         return copy.deepcopy(self.name), copy.deepcopy(self.coor)
 
     def print_variables(self):
-        print("Name:",self.name)
+        print("Name:",self.name,self.name3)
         print("Coor:",self.coor)
         print("Atom_names:",self.atom_names)
         print("adjacency:",self.adj_mat,'\n',self.edges)
@@ -95,7 +97,6 @@ class mono():
                     a[ii][-1] = 1;
         self.atom_onehot = a
         return
-
 
     def calc_adjacency(self):
         #get the adjacency matrix and edge list of the carb
@@ -120,7 +121,6 @@ class mono():
         self.adj_mat = adj_mat
         self.edges = edge_list
         return
-
 
     def get_ring_com(self):
         #print(self.ring_onehot)
@@ -370,6 +370,86 @@ class poly():
             #else:
                 #print('banned:\t',r1,'\t',r2)
         return np.unique(arr).astype(int)
+
+    # goes thru the polymer to create the pyrosetta string name
+    def get_full_name(self,ind,edges):
+
+        s = ''
+        arr = copy.deepcopy(edges[ind])
+
+        #print(ind,self.monos[ind].name3,arr,edges)
+
+        #have a branch
+        if len(arr) > 1:
+            for i in arr:
+                edges[ind].remove(i) #remove forward connection
+                edges[i].remove(ind) #remove backward connection
+                print(edges)
+                if i != len(arr) - 1:
+                    s += '[' + self.get_full_name(i,edges) + ']'
+                else:
+                    s +=  self.get_full_name(i,edges)
+        elif len(arr) == 1:
+            edges[arr[0]].remove(ind) #remove backward connection
+            edges[ind].remove(arr[0]) #remove forward connection
+
+            s += self.get_full_name(arr[0],edges);
+
+        s += self.monos[ind].name
+
+        return s
+
+    def get_name(self):
+        edges = copy.deepcopy(self.edges);
+        q = [3];
+        s = ''
+
+        while len(q) > 0:
+            #print(q)
+            i = q[0]
+            q.remove(q[0])
+
+            #get edges
+
+
+            #assume single edge
+            if len(edges[i]) > 0:
+                e = edges[i][0]
+                edges[i].remove(e)
+                edges[e].remove(i)
+
+                q.append(e)
+
+                #oxygen numbers
+                aq = self.monos[i].atom_names[ self.link_atoms[i,e] ]
+                ae = self.monos[e].atom_names[ self.link_atoms[e,i] ]
+                aq = aq.strip()[-1]
+                ae = ae.strip()[-1]
+
+                s += '-' + self.monos[i].name + '-(' + aq + '->' + ae + ')-'
+            else:
+                s += '-' + self.monos[i].name
+            #print(s)
+
+        return s
+
+
+    def get_poly_name(self):
+        s = self.get_full_name(0,copy.deepcopy(self.edges))
+        print(s)
+        #remove start space
+        if s[0] == ' ':
+            s = s[1:]
+        while s[0] == '[':
+            s = s[1:]
+
+        while '][' in s:
+            for ii in range(len(s)-1):
+                if s[ii] == ']':
+                    if s[ii+1] == '[':
+                        s = s[:ii] + s[ii+1:]
+                        break;
+        return s
 
     #translate the entire carbohydrate
     def translation(self,dx):
@@ -670,12 +750,14 @@ def rotation_matrix_from_vectors(vec1, vec2):
     rotation_matrix = np.eye(3) + kmat + kmat.dot(kmat) * ((1 - c) / (s ** 2))
     return rotation_matrix
 
+#input a pyrosetta carb pose_from_saccharide_sequence and get polymer
 def pyrosetta_to_poly(pose):
     polymer = []
     for ii in range(1,pose.size()+1):
         r = pose.residue(ii)
         n = []
         c = []
+        info = pose.residue_type(ii).carbohydrate_info()
 
         for a in range(1,r.natoms()+1):
             name = r.atom_name(a)
@@ -693,18 +775,24 @@ def pyrosetta_to_poly(pose):
         #print(r.name(),n,c)
         #print(r)
         #print(r.name3())
-        m = mono(r.name3(),c,n)
+        m = mono(info.short_name(),r.name3(),c,n)
         #print(m.ring_atom)
         polymer.append(m)
 
     return poly(polymer)
 
+#enter a pdb with carbs in and the carb residues labeled, return polymer
 def pdb_to_poly(pose,residues):
+
+
     polymer = []
     for ii in residues:
+
         r = pose.residue(ii)
         n = []
         c = []
+
+        info = pose.residue_type(ii).carbohydrate_info()
 
         for a in range(1,r.natoms()+1):
             name = r.atom_name(a)
@@ -722,7 +810,8 @@ def pdb_to_poly(pose,residues):
         #print(r.name(),n,c)
         #print(r)
         #print(r.name3())
-        m = mono(r.name3(),c,n)
+
+        m = mono(info.short_name(),r.name3(),c,n)
         #print(m.ring_atom)
         polymer.append(m)
 

@@ -42,10 +42,12 @@ if __name__ == '__main__':
     sc = get_score_function()
     fr = pyrosetta.rosetta.protocols.relax.FastRelax()
     fr.set_scorefxn(sc)
-    fr.max_iter(50)
+    fr.max_iter(15)
 
-    s = '-alpha-D-Manp->4)-alpha-D-ManpNAc->2)-alpha-D-Glcp->2)-alpha-D-Galp'
-    #carb = pose_from_saccharide_sequence("a-Manp6Ac-(1->3)-[b-GlcpA-(1->2)]-a-Manp6Ac-(1->3)-a-Manp6Ac-(1->3)-[b-Xylp-(1->2)]-a-Manp-(1->3)-[b-GlcpA-(1->2)]-a-Manp6Ac-(1->3)-a-Manp6Ac-(1->3)-[b-Xylp-(1->2)]-a-Manp-(1->3)-a-Manp6Ac-(1->3)")
+    #s = '-alpha-D-Manp->4)-alpha-D-ManpNAc->2)-alpha-D-Glcp->2)-alpha-D-Galp'
+    #s = "a-Manp6Ac-(1->3)-[b-GlcpA-(1->2)]-a-Manp6Ac-(1->3)-a-Manp6Ac-(1->3)-[b-Xylp-(1->2)]-a-Manp-(1->3)-[b-GlcpA-(1->2)]-a-Manp6Ac-(1->3)-a-Manp6Ac-(1->3)-[b-Xylp-(1->2)]-a-Manp-(1->3)-a-Manp6Ac-(1->3)"
+    s = "a-Manp6Ac-(1->3)-b-GlcpA-(1->2)-a-Manp6Ac-(1->3)-a-Manp6Ac-(1->3)"
+    s = '-alpha-D-ManpAc--(1->3)--beta-D-GlcpA--(1->2)--alpha-D-ManpAc--(1->3)--alpha-D-ManpAc'
     carb = pose_from_saccharide_sequence(s)
     fr.apply(carb)
 
@@ -53,6 +55,7 @@ if __name__ == '__main__':
     p = pyrosetta_to_poly(carb)
     p2 = copy.deepcopy(p)
 
+    print(s,'\n',p.get_name())
 
     #calculate rmsd
     print('RMSD\tRing\tAtom')
