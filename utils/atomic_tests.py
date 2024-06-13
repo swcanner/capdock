@@ -45,15 +45,17 @@ if __name__ == '__main__':
     fr.max_iter(15)
 
     #s = '-alpha-D-Manp->4)-alpha-D-ManpNAc->2)-alpha-D-Glcp->2)-alpha-D-Galp'
-    #s = "a-Manp6Ac-(1->3)-[b-GlcpA-(1->2)]-a-Manp6Ac-(1->3)-a-Manp6Ac-(1->3)-[b-Xylp-(1->2)]-a-Manp-(1->3)-[b-GlcpA-(1->2)]-a-Manp6Ac-(1->3)-a-Manp6Ac-(1->3)-[b-Xylp-(1->2)]-a-Manp-(1->3)-a-Manp6Ac-(1->3)"
-    s = "a-Manp6Ac-(1->3)-b-GlcpA-(1->2)-a-Manp6Ac-(1->3)-a-Manp6Ac-(1->3)"
-    s = '-alpha-D-ManpAc--(1->3)--beta-D-GlcpA--(1->2)--alpha-D-ManpAc--(1->3)--alpha-D-ManpAc'
+    s = "a-Manp6Ac-(1->3)-[b-GlcpA-(1->2)]-a-Manp6Ac-(1->3)-a-Manp6Ac-(1->3)-[b-Xylp-(1->2)]-a-Manp-(1->3)-[b-GlcpA-(1->2)]-a-Manp6Ac-(1->3)-a-Manp6Ac-(1->3)-[b-Xylp-(1->2)]-a-Manp-(1->3)-a-Manp6Ac-(1->3)"
+    #s = "a-Manp6Ac-(1->3)-b-GlcpA-(1->2)-a-Manp6Ac-(1->3)-a-Manp6Ac-(1->3)"
+    #s = '-alpha-D-ManpAc--(1->3)--beta-D-GlcpA--(1->2)--alpha-D-ManpAc--(1->3)--alpha-D-ManpAc'
     carb = pose_from_saccharide_sequence(s)
     fr.apply(carb)
 
     #make the polymer
     p = pyrosetta_to_poly(carb)
     p2 = copy.deepcopy(p)
+
+    align(p,p2)
 
     print(s,'\n',p.get_name())
 
@@ -69,7 +71,28 @@ if __name__ == '__main__':
     #print('ALIGN WITH NOTHING: RMSD\tRing\tAtom')
     #print('\t',ring_rmsd(p,p2),'\t',atom_rmsd(p,p2))
 
+    #noise structure with scheduler
+    out = "MODEL    0\n"
+    out += p.output_pdb()
+    out += 'TER\nENDMDL\n'
 
+    d_ang = 45
+    eps = 1e-5
+    for jj in range(100,1,-1):
+        gamma = 1 - 1 / float(jj);
+        p.noise_structure(np.sqrt(1 - gamma) * d_ang);
+        align(p,p2)
+        print(jj,'\t',round(ring_rmsd(p,p2),3),'\t',round(atom_rmsd(p,p2),3), round(np.sum(get_angle_diff(p,p2))))
+
+        out += "MODEL    " + str(jj+1) + '\n'
+        out += p.output_pdb()
+        out += 'TER\nENDMDL\n'
+
+    f = open('../test_pdbs/noising.pdb','w+')
+    f.write(out)
+    f.close()
+
+    """
     print("\nRotating p \n")
 
     for jj in range(50):
@@ -118,6 +141,9 @@ if __name__ == '__main__':
     f.write(out)
     f.close()
 
+
+
+
     print("Big Rotation")
     for jj in range(150):
         #find edge and then perturb
@@ -128,8 +154,9 @@ if __name__ == '__main__':
         deg = np.random.normal(0,10)
 
         p.dihedral_rotation(r,e,deg,degrees=True)
+    """
 
-    align(p,p2)
+
     #print("\nComs:\t",p.monos[0].get_ring_com(),'\t',p.monos[-1].get_ring_com())
 
     print('\nRMSD\tRing\tAtom')

@@ -7,7 +7,7 @@ from scipy.spatial.transform import Rotation as Rot
 import math
 from pyrosetta import *
 
-#A = mono(name,coor,atom_names)
+#A = mono(name,name3,long_name,coor,atom_names)
 class mono():
     """
     Class object for a MONOMER of a carbohydrate
@@ -29,11 +29,11 @@ class mono():
 
 
     """
-    def __init__(self,name,name3,long_name,coor,atom_names,BOND_CUTOFF=1.65,ATOM_LIST=['O','C','N','S','P','X']):
+    def __init__(self,name,name3,coor,atom_names,BOND_CUTOFF=1.65,ATOM_LIST=['O','C','N','S','P','X']):
         #self.is_sia = is_sia
         self.name = name
         self.name3 = name3
-        self.long_name = long_name
+        #self.long_name = long_name
         self.coor = coor
         #print(self.coor)
         self.atom_names = atom_names
@@ -232,6 +232,7 @@ class poly():
 
         adj_mat (arr nxn): adjacency matrix
         edges (arr nx?): connection edges of the shared atoms
+        edge_list (arr nx2x?): list of all edges (forward AND backward)
         link_atoms (arr nxn): defines atom number of shared "linker" atoms - C or O
         DIST_CUTOFF (float): defines inter-res atom connection distance cutoff for bond
         angle_diff (arr nxn): defines difference between consecutive monomers
@@ -244,6 +245,7 @@ class poly():
         self.adj_mat = np.zeros( (len(monos),len(monos)) );
         self.link_atoms = np.zeros( (len(monos),len(monos)) );
         self.edges = []
+        self.edge_list = []
         self.DIST_CUTOFF=DIST_CUTOFF
         self.angle_diff = []
 
@@ -309,9 +311,11 @@ class poly():
 
         for ii in range(len(self.adj_mat)):
             self.edges.append([])
+
             for jj in range(len(self.adj_mat[ii])):
                 if self.adj_mat[ii,jj]:
                     self.edges[ii].append(jj)
+                    self.edge_list.append([ii,jj])
 
         self.link_atoms = self.link_atoms.astype(int)
         return;
@@ -476,6 +480,19 @@ class poly():
         self.angle_diff = diff
         return diff;
 
+    #noises the structure by dihedral rotations around every edge
+    def noise_structure(self,noise_std,degrees=True):
+        #calculate all rotations at once
+        deg = np.random.normal(0,noise_std,len(self.edge_list) )
+
+        for e in range(len(self.edge_list)):
+            #deg = np.random.normal(0,10)
+            r1 = self.edge_list[e][0]
+            r2 = self.edge_list[e][1]
+            d_phi = deg[e]
+            self.dihedral_rotation(r1,r2,d_phi)
+
+        return
 
     #rotate a monomer and all lever arm residues in the chain by some change in phi
     def dihedral_rotation(self,r1,r2,d_phi,degrees=True):
@@ -565,7 +582,7 @@ class poly():
                 out += str(anum).rjust(5) + ' '
                 out += m.atom_names[a].rjust(4)
                 out += ' ' # no alt location indicator
-                out += m.name.ljust(4)
+                out += m.name3.ljust(4)
                 out += 'A'
                 out += str(resnum).rjust(4)
                 out += '   '
@@ -834,5 +851,5 @@ if __name__ == '__main__':
                      [-2.94593960e-01,  4.80014399e+00, -3.44637701e+00]] )
 
     names = ['C','O','Q','N','N','N','N','N','N','N']
-    m = mono('bruh',coor,names)
+    m = mono('bruh','ape',coor,names)
     p = poly([m])
