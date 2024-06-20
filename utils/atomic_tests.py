@@ -71,6 +71,10 @@ if __name__ == '__main__':
     #print('ALIGN WITH NOTHING: RMSD\tRing\tAtom')
     #print('\t',ring_rmsd(p,p2),'\t',atom_rmsd(p,p2))
 
+    f = open('../test_pdbs/gxm.pdb','w+')
+    f.write( p.output_pdb() )
+    f.close()
+
     #noise structure with scheduler
     out = "MODEL    0\n"
     out += p.output_pdb()
@@ -82,7 +86,7 @@ if __name__ == '__main__':
         gamma = 1 - 1 / float(jj);
         p.noise_structure(np.sqrt(1 - gamma) * d_ang);
         align(p,p2)
-        print(jj,'\t',round(ring_rmsd(p,p2),3),'\t',round(atom_rmsd(p,p2),3), round(np.sum(get_angle_diff(p,p2))))
+        print(jj,'\t',round(ring_rmsd(p,p2),3),'\t',round(atom_rmsd(p,p2),3), round(np.sum(get_angle_diff(p,p2)),3 ))
 
         out += "MODEL    " + str(jj+1) + '\n'
         out += p.output_pdb()
