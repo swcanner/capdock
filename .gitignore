@@ -1,3 +1,4 @@
 *.pdb
 dataset/*
 *.DS_Store
+*.txt
