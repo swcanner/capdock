@@ -29,7 +29,7 @@ class mono():
 
 
     """
-    def __init__(self,name,name3,coor,atom_names,BOND_CUTOFF=1.65,ATOM_LIST=['O','C','N','S','P','X']):
+    def __init__(self,name,name3,coor,atom_names,BOND_CUTOFF=1.75,ATOM_LIST=['O','C','N','S','P','X']):
         #self.is_sia = is_sia
         self.name = name
         self.name3 = name3
@@ -134,6 +134,8 @@ class mono():
     def get_normal(self):
         #print(self.ring_onehot)
         ring = self.coor[self.ring_atom]
+        if len(ring) < 4:
+            return np.zeros(3)
         a1 = ring[0,:]
         a2 = ring[2,:]
         a3 = ring[-1,:]
@@ -212,7 +214,15 @@ class mono():
 
     def calc_ring(self):
         #gets the ring atoms, calls recursive visit function
-        ring = self.visit(0,self.edges.copy(),np.zeros(len(self.coor)),0)
+        ring = self.visit(0,copy.deepcopy(self.edges),np.zeros(len(self.coor)),0)
+        ind = 0
+        while type(ring) == bool:
+            #print('ringboi',ind,len(self.coor))
+            ring = self.visit(ind,copy.deepcopy(self.edges),np.zeros(len(self.coor)),ind)
+            ind += 1;
+            if ind >= len(self.coor):
+                break;
+        
         #print(ring)
         self.ring_atom  = np.unique(ring).astype(int)
         #print(self.ring_atom)
@@ -792,6 +802,50 @@ def pyrosetta_to_poly(pose):
         #print(r.name(),n,c)
         #print(r)
         #print(r.name3())
+        m = mono(info.short_name(),r.name3(),c,n)
+        #print(m.ring_atom)
+        polymer.append(m)
+
+    return poly(polymer)
+
+#enter coordinates and chain and get the polymer object instance
+def chain_to_poly(chain,coor,res):
+    """
+    params:
+        chain (str): chain identifier
+        coor (arr n x 3): coordinates
+        res (arr n x 3): residue information of each atom (aname, coor, resnum)
+    return:
+        polymer
+    """
+
+
+    polymer = []
+    for ii in residues:
+
+        r = pose.residue(ii)
+        n = []
+        c = []
+
+        info = pose.residue_type(ii).carbohydrate_info()
+
+        for a in range(1,r.natoms()+1):
+            name = r.atom_name(a)
+
+            #only the real heavy atoms
+            if "H" in name or "V" in name:
+                continue;
+
+            #print(a,r.atom_name(a),r.xyz(a))
+
+            n.append(name)
+            c.append(np.array(r.xyz(a)))
+
+        c = np.array(c)
+        #print(r.name(),n,c)
+        #print(r)
+        #print(r.name3())
+
         m = mono(info.short_name(),r.name3(),c,n)
         #print(m.ring_atom)
         polymer.append(m)
