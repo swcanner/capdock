@@ -1,0 +1,10 @@
+_target_: src.data.docking_dataset.DockingDataModule
+
+train_dataset: dips_train_0.3_rep
+val_dataset: dips_val_0.3_rep
+use_sasa: True
+use_interface: True
+use_contact: True
+batch_size: 1
+num_workers: 6
+pin_memory: True

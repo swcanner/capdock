@@ -3,6 +3,8 @@ import torch
 import os
 from omegaconf import DictConfig
 
+print(os.getcwd())
+
 #os.environ["WANDB_API_KEY"] = 'bb76c909bdc55c9510c7e47d567c2f6c8a30f369'
 #os.environ["WANDB_MODE"] = "offline"
 os.environ["WANDB__SERVICE_WAIT"] = "300"
@@ -13,8 +15,8 @@ def main(config: DictConfig):
 
     # Imports can be nested inside @hydra.main to optimize tab completion
     # https://github.com/facebookresearch/hydra/issues/934
-    from src.train import train
-    from src.utils import utils
+    from train import train
+    from utils import utils
 
     # A couple of optional utilities:
     # - disabling python warnings

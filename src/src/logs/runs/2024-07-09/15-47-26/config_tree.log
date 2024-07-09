@@ -1,0 +1,89 @@
+CONFIG
+├── trainer
+│   └── _target_: pytorch_lightning.Trainer                                                                                                 
+│       accelerator: auto                                                                                                                   
+│       min_epochs: 1                                                                                                                       
+│       max_epochs: 10                                                                                                                      
+│       num_sanity_val_steps: 1                                                                                                             
+│       gradient_clip_val: 0.0                                                                                                              
+│       check_val_every_n_epoch: 1                                                                                                          
+│                                                                                                                                           
+├── model
+│   └── _target_: src.models.score_model.Score_Model                                                                                        
+│       model:                                                                                                                              
+│         lm_embed_dim: 1303                                                                                                                
+│         positional_embed_dim: 66                                                                                                          
+│         spatial_embed_dim: 60                                                                                                             
+│         contact_embed_dim: 1                                                                                                              
+│         node_dim: 256                                                                                                                     
+│         edge_dim: 128                                                                                                                     
+│         inner_dim: 32                                                                                                                     
+│         depth: 4                                                                                                                          
+│         dropout: 0.1                                                                                                                      
+│         cut_off: 50.0                                                                                                                     
+│         normalize: true                                                                                                                   
+│       diffuser:                                                                                                                           
+│         r3:                                                                                                                               
+│           min_sigma: 0.1                                                                                                                  
+│           max_sigma: 50.0                                                                                                                 
+│           schedule: VE                                                                                                                    
+│         so3:                                                                                                                              
+│           num_omega: 1000                                                                                                                 
+│           num_sigma: 1000                                                                                                                 
+│           min_sigma: 0.1                                                                                                                  
+│           max_sigma: 1.5                                                                                                                  
+│           schedule: logarithmic                                                                                                           
+│           cache_dir: .cache/                                                                                                              
+│           use_cached_score: false                                                                                                         
+│       experiment:                                                                                                                         
+│         lr: 0.0001                                                                                                                        
+│         weight_decay: 0.0                                                                                                                 
+│         grad_energy: true                                                                                                                 
+│         perturb_tr: true                                                                                                                  
+│         perturb_rot: true                                                                                                                 
+│         separate_energy_loss: true                                                                                                        
+│         separate_tr_loss: true                                                                                                            
+│         separate_rot_loss: true                                                                                                           
+│                                                                                                                                           
+├── datamodule
+│   └── _target_: rigid_docking.datasets.dips_datamodule.DipsDataModule                                                                     
+│       data_dir: /home/lchu11/scr4_jgray21/lchu11/Docking-dev/data/dips/pt_files                                                           
+│       train_list: /home/lchu11/scr4_jgray21/lchu11/Docking-dev/data/dips_equidock/train_list_rev.txt                                      
+│       val_list: /home/lchu11/scr4_jgray21/lchu11/Docking-dev/data/dips_equidock/val_list_rev.txt                                          
+│       test_list: /home/lchu11/scr4_jgray21/lchu11/Docking-dev/data/dips_equidock/test_list.txt                                            
+│       batch_size: 1                                                                                                                       
+│       num_workers: 6                                                                                                                      
+│       pin_memory: true                                                                                                                    
+│                                                                                                                                           
+├── callbacks
+│   └── model_checkpoint:                                                                                                                   
+│         _target_: pytorch_lightning.callbacks.ModelCheckpoint                                                                             
+│         monitor: val/loss                                                                                                                 
+│         mode: min                                                                                                                         
+│         save_top_k: 1                                                                                                                     
+│         save_last: false                                                                                                                  
+│         verbose: false                                                                                                                    
+│         dirpath: checkpoints/                                                                                                             
+│         filename: epoch_{epoch:03d}                                                                                                       
+│         auto_insert_metric_name: false                                                                                                    
+│                                                                                                                                           
+├── logger
+│   └── wandb:                                                                                                                              
+│         _target_: pytorch_lightning.loggers.wandb.WandbLogger                                                                             
+│         project: generative_model                                                                                                         
+│         name: null                                                                                                                        
+│         save_dir: .                                                                                                                       
+│         offline: false                                                                                                                    
+│         id: null                                                                                                                          
+│         log_model: false                                                                                                                  
+│         prefix: ''                                                                                                                        
+│         job_type: train                                                                                                                   
+│         group: ''                                                                                                                         
+│         tags: []                                                                                                                          
+│                                                                                                                                           
+├── test_after_training
+│   └── False                                                                                                                               
+├── seed
+│   └── 0                                                                                                                                   
+└── name
+    └── None                                                                                                                                

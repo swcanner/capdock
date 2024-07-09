@@ -490,6 +490,20 @@ class poly():
         self.angle_diff = diff
         return diff;
 
+    #rotates all torsion angles
+    def torsion_structure(self,dx,degrees=True):
+
+        assert len(self.edge_list) == len(dx)
+
+        for e in range(len(self.edge_list)):
+            #deg = np.random.normal(0,10)
+            r1 = self.edge_list[e][0]
+            r2 = self.edge_list[e][1]
+            d_phi = dx[e]
+            self.dihedral_rotation(r1,r2,d_phi)
+
+        return
+
     #noises the structure by dihedral rotations around every edge
     def noise_structure(self,noise_std,degrees=True):
         #calculate all rotations at once

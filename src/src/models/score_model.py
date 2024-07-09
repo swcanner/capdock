@@ -8,15 +8,16 @@ import random
 from torch.utils import data
 from torch_geometric.loader import DataLoader
 from omegaconf import DictConfig
-from src.models.components.egnn_net import EGNN_Net
+from src.models.score_net import Score_Net
 from src.utils.so3_diffuser import SO3Diffuser 
 from src.utils.r3_diffuser import R3Diffuser 
-from src.utils.geometry import axis_angle_to_matrix, axis_angle_to_rotation_6d
-from scipy.spatial.transform import Rotation 
+from src.utils.geometry import axis_angle_to_matrix
 from src.data.docking_dataset import DockingDataset
 
+#----------------------------------------------------------------------------
+# Main wrapper for training the model
 
-class EGNN_Model(pl.LightningModule):
+class Score_Model(pl.LightningModule):
     def __init__(
         self,
         model,
@@ -28,20 +29,17 @@ class EGNN_Model(pl.LightningModule):
         self.lr = experiment.lr
         self.weight_decay = experiment.weight_decay
 
-        # if calculate gradient of energy
+        # energy
         self.grad_energy = experiment.grad_energy
-        self.separate_ec_loss = experiment.separate_ec_loss
+        self.separate_energy_loss = experiment.separate_energy_loss
         
-        # if penalize clash
-        self.penalize_clash = experiment.penalize_clash
-
         # translation
-        self.separate_tr_loss = experiment.separate_tr_loss
         self.perturb_tr = experiment.perturb_tr
+        self.separate_tr_loss = experiment.separate_tr_loss
 
         # rotation
-        self.separate_rot_loss = experiment.separate_rot_loss
         self.perturb_rot = experiment.perturb_rot
+        self.separate_rot_loss = experiment.separate_rot_loss
 
         # diffuser
         if self.perturb_tr:
@@ -50,31 +48,23 @@ class EGNN_Model(pl.LightningModule):
             self.so3_diffuser = SO3Diffuser(diffuser.so3)
 
         # net
-        self.net = EGNN_Net(model)
+        self.net = Score_Net(model)
     
-    def forward(self, rec_x, lig_x, rec_pos, lig_pos, t):
+    def forward(self, rec_x, lig_x, rec_pos, lig_pos, contact_matrix, t):
         # move the lig center to origin
         center = lig_pos[..., 1, :].mean(dim=0)
         rec_pos -= center
         lig_pos -= center
-
-        # contact matrix
-        n1 = rec_pos.size(0)
-        n2 = lig_pos.size(0)
-        contact_matrix = torch.zeros((n1 + n2, n1 + n2), device=self.device)
 
         # predict
         energy, fa_rep, f, tr_score, rot_score = self.net(rec_x, lig_x, rec_pos, lig_pos, t, contact_matrix, predict=True)
 
         return energy, fa_rep, f, tr_score, rot_score
 
-    def loss_fn(self, rec_x, lig_x, rec_pos, lig_pos, eps=1e-5):
+    def loss_fn(self, rec_x, lig_x, rec_pos, lig_pos, contact_matrix, position_matrix, eps=1e-5):
         with torch.no_grad():
             # uniformly sample a timestep
             t = torch.rand(1, device=self.device) * (1. - eps) + eps
-
-            # random rotation augmentation
-            rec_pos, lig_pos = self.random_rotation(rec_pos, lig_pos)
 
             # sample perturbation for translation and rotation
             if self.perturb_tr:
@@ -95,10 +85,6 @@ class EGNN_Model(pl.LightningModule):
                 rot_update = np.zeros(3)
                 rot_update = torch.from_numpy(rot_update).float().to(self.device)
 
-            # get sampled contact matrix
-            contact_matrix = self.get_sampled_contact_matrix(
-                rec_pos[..., 1, :], lig_pos[..., 1, :], num_samples=random.randint(0, 3))
-
             # update poses
             lig_pos = self.modify_coords(lig_pos, rot_update, tr_update)
             
@@ -109,9 +95,9 @@ class EGNN_Model(pl.LightningModule):
 
         # predict score based on the current state
         if self.grad_energy:
-            energy, dedx, f, tr_score, rot_score = self.net(rec_x, lig_x, rec_pos, lig_pos, t, contact_matrix)
+            energy, dedx, f, tr_score, rot_score = self.net(rec_x, lig_x, rec_pos, lig_pos, t, contact_matrix, position_matrix)
             # energy conservation loss
-            if self.separate_ec_loss:
+            if self.separate_energy_loss:
                 f_angle = torch.norm(f, dim=-1, keepdim=True)
                 f_axis = f / (f_angle + 1e-6)
 
@@ -119,14 +105,13 @@ class EGNN_Model(pl.LightningModule):
                 dedx_axis = dedx / (dedx_angle + 1e-6)
 
                 ec_axis_loss = torch.mean((f_axis - dedx_axis)**2)
-                #ec_axis_loss = 1.0 - torch.mean(torch.sum(f_axis * dedx_axis, dim=-1))
                 ec_angle_loss = torch.mean((f_angle - dedx_angle)**2)
                 ec_loss = 0.5 * (ec_axis_loss + ec_angle_loss)
                 
             else:
                 ec_loss = torch.mean((dedx - f)**2)
         else:
-            energy, fa_rep, f, tr_score, rot_score = self.net(rec_x, lig_x, rec_pos, lig_pos, t, contact_matrix, predict=True)
+            energy, fa_rep, f, tr_score, rot_score = self.net(rec_x, lig_x, rec_pos, lig_pos, t, contact_matrix, position_matrix, predict=True)
             # energy conservation loss
             ec_loss = torch.tensor(0.0, device=self.device)
         
@@ -140,7 +125,6 @@ class EGNN_Model(pl.LightningModule):
                 pred_tr_axis = tr_score / (pred_tr_angle + 1e-6)
 
                 tr_axis_loss = torch.mean((pred_tr_axis - gt_tr_axis)**2)
-                #tr_axis_loss = 1.0 - torch.mean(torch.sum(pred_tr_axis * gt_tr_axis, dim=-1))
                 tr_angle_loss = torch.mean((pred_tr_angle - gt_tr_angle)**2 / tr_score_scale**2)
                 tr_loss = 0.5 * (tr_axis_loss + tr_angle_loss)
 
@@ -158,7 +142,6 @@ class EGNN_Model(pl.LightningModule):
                 pred_rot_axis = rot_score / (pred_rot_angle + 1e-6)
 
                 rot_axis_loss = torch.mean((pred_rot_axis - gt_rot_axis)**2)
-                #rot_axis_loss = 1.0 - torch.mean(torch.sum(pred_rot_axis * gt_rot_axis, dim=-1))
                 rot_angle_loss = torch.mean((pred_rot_angle - gt_rot_angle)**2 / rot_score_scale**2)
                 rot_loss = 0.5 * (rot_axis_loss + rot_angle_loss)
 
@@ -167,21 +150,9 @@ class EGNN_Model(pl.LightningModule):
         else:
             rot_loss = torch.tensor(0.0, device=self.device)
 
-        if self.penalize_clash:
-            # get updated pose
-            tr_pred = tr_score / tr_score_scale**2 
-            rot_pred = rot_score / rot_score_scale**2
-            lig_pos_pred = self.modify_coords(lig_pos, rot_pred, tr_pred)
-            D = torch.norm((rec_pos[:, None, 1, :] - lig_pos_pred[None, :, 1, :]), dim=-1)
-            mask = (D < 3.0).float()
-            clash_loss = ((3.0 - D) * mask).sum() / (mask.sum() + 1e-6) 
-            clash_loss *= (1.0 - t.item())
-        else:
-            clash_loss = torch.tensor(0.0, device=self.device)
-
         # total losses
-        loss = tr_loss + rot_loss + ec_loss + clash_loss
-        losses = {"tr_loss": tr_loss, "rot_loss": rot_loss, "ec_loss": ec_loss, "clash_loss": clash_loss, "loss": loss}
+        loss = tr_loss + rot_loss + ec_loss
+        losses = {"tr_loss": tr_loss, "rot_loss": rot_loss, "ec_loss": ec_loss, "loss": loss}
 
         return losses
 
@@ -192,63 +163,16 @@ class EGNN_Model(pl.LightningModule):
         lig_pos = (lig_pos - lig_cen) @ rot.T + lig_cen + tr
         return lig_pos
 
-    def random_rotation(self, rec_pos, lig_pos):
-        rot = torch.from_numpy(Rotation.random().as_matrix()).float().to(self.device)
-        pos = torch.cat([rec_pos, lig_pos], dim=0)
-        cen = pos[..., 1, :].mean(dim=0)
-        pos = (pos - cen) @ rot.T
-        rec_pos_out = pos[:rec_pos.size(0)]
-        lig_pos_out = pos[rec_pos.size(0):]
-        return rec_pos_out, lig_pos_out
-    
-    def get_sampled_contact_matrix(self, set1, set2, threshold=8.0, num_samples=None):
-        """
-        Constructs a contact matrix for two sets of residues with 1 indicating sampled contact pairs.
-        
-        :param set1: PyTorch tensor of shape [n1, 3] for residues in set 1
-        :param set2: PyTorch tensor of shape [n2, 3] for residues in set 2
-        :param threshold: Distance threshold to define contact residues
-        :param num_samples: Number of contact pairs to sample. If None, use all valid contacts.
-        :return: PyTorch tensor of shape [(n1+n2), (n1+n2)] representing the contact matrix with sampled contact pairs
-        """
-        n1 = set1.size(0)
-        n2 = set2.size(0)
-        
-        # Compute the pairwise distances between set1 and set2
-        dists = torch.cdist(set1, set2)
-        
-        # Find pairs where distances are less than or equal to the threshold
-        contact_pairs = (dists <= threshold)
-        
-        # Get indices of valid contact pairs
-        contact_indices = contact_pairs.nonzero(as_tuple=False)
-        
-        # Initialize the contact matrix with zeros
-        contact_matrix = torch.zeros((n1 + n2, n1 + n2), device=self.device)
-
-        # Determine the number of samples
-        if num_samples is None or num_samples > contact_indices.size(0):
-            num_samples = contact_indices.size(0)
-        
-        if num_samples > 0:
-            # Sample contact indices uniformly
-            sampled_indices = contact_indices[torch.randint(0, contact_indices.size(0), (num_samples,))]
-            
-            # Fill in the contact matrix for the sampled contacts
-            contact_matrix[sampled_indices[:, 0], sampled_indices[:, 1] + n1] = 1.0
-            contact_matrix[sampled_indices[:, 1] + n1, sampled_indices[:, 0]] = 1.0
-        
-        return contact_matrix
-
-    
     def step(self, batch, batch_idx):
         rec_x = batch['rec_x'].squeeze(0)
         lig_x = batch['lig_x'].squeeze(0)
         rec_pos = batch['rec_pos'].squeeze(0)
         lig_pos = batch['lig_pos'].squeeze(0)
+        contact_matrix = batch['contact_matrix'].squeeze(0)
+        position_matrix = batch['position_matrix'].squeeze(0)
 
         # get losses
-        losses = self.loss_fn(rec_x, lig_x, rec_pos, lig_pos)
+        losses = self.loss_fn(rec_x, lig_x, rec_pos, lig_pos, contact_matrix, position_matrix)
         return losses
 
     def training_step(self, batch, batch_idx):
@@ -297,10 +221,17 @@ class EGNN_Model(pl.LightningModule):
         )
         return optimizer
 
+#----------------------------------------------------------------------------
+# Testing run
 
-@hydra.main(version_base=None, config_path="/home/lchu11/scr4_jgray21/lchu11/graylab_repos/Dock_Diffusion/configs/model", config_name="egnn_model.yaml")
+@hydra.main(version_base=None, config_path="/scratch4/jgray21/lchu11/graylab_repos/DL_Gen_Docking/configs/model", config_name="score_model.yaml")
 def main(conf: DictConfig):
-    dataset = DockingDataset(dataset='dips_train_hetero')
+    dataset = DockingDataset(
+        dataset='dips_train_hetero',
+        use_sasa=True,
+        use_interface=True,
+        use_contact=True,
+    )
 
     subset_indices = [0]
     subset = data.Subset(dataset, subset_indices)
@@ -308,7 +239,7 @@ def main(conf: DictConfig):
     #load dataset
     dataloader = DataLoader(subset)
     
-    model = EGNN_Model(
+    model = Score_Model(
         model=conf.model, 
         diffuser=conf.diffuser,
         experiment=conf.experiment
@@ -318,6 +249,3 @@ def main(conf: DictConfig):
 
 if __name__ == '__main__':
     main()
-
-
-    

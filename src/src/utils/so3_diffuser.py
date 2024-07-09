@@ -344,6 +344,7 @@ class SO3Diffuser:
             dt: torch.tensor,
             t: float,
             noise_scale: float=1.0,
+            ode: bool=False,
             ):
         """Simulates the reverse SDE for 1 step using the Geodesic random walk.
 
@@ -357,6 +358,9 @@ class SO3Diffuser:
         """
         if not np.isscalar(t): raise ValueError(f'{t} must be a scalar.')
         g_t = self.diffusion_coef(t)
-        z = noise_scale * torch.randn(1, 3, device=score_t.device)
-        perturb = (g_t ** 2) * score_t * dt + g_t * torch.sqrt(dt) * z
+        if not ode:
+            z = noise_scale * torch.randn(1, 3, device=score_t.device)
+            perturb = (g_t ** 2) * score_t * dt + g_t * torch.sqrt(dt) * z
+        else:
+            perturb = 0.5 * (g_t ** 2) * score_t * dt
         return perturb.float()
