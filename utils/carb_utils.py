@@ -71,6 +71,9 @@ class mono():
 
         #self.print_variables()
 
+    def __len__(self):
+        return len(self.coor)
+
     def deepcopy(self):
         return copy.deepcopy(self.name), copy.deepcopy(self.coor)
 
@@ -264,6 +267,9 @@ class poly():
 
         #self.print_variables()
 
+    def __len__(self):
+        return len(self.monos)
+
     #deep copy of the monomers
     def deepcopy(self):
         #to create a deep copy
@@ -362,6 +368,27 @@ class poly():
             else:
                 coor = np.row_stack((coor,c))
         return coor
+
+    def get_ring_atoms_edge(self,reverse=False):
+        c = self.get_atom_coor()
+        r = len(self)
+
+        edges = [];
+        curr_mono = 0
+        curr_upper = len(self.mono[0])
+        r = len(c)
+        for jj in range(len(c)):
+            if jj > curr_upper:
+                curr_mono += 1;
+                curr_upper += len(self.mono[curr_mono])
+                r += 1
+
+            if reverse:
+                edges.append([r,jj])
+            else:
+                edges.append([jj,r])
+        return edges
+
 
 
     #recursively find all connections in the polymer chain

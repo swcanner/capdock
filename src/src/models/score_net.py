@@ -72,6 +72,7 @@ def get_knn_and_sample(points, knn=20, sample_size=40, epsilon=1e-10):
     
     return knn_indices, sampled_points_indices
 
+
 #----------------------------------------------------------------------------
 # Modules
 
@@ -152,6 +153,8 @@ class EGNN(nn.Module):
             h, x = self._modules["EGNN_%d" % i](h, x, edges, edge_attr=edge_attr)
         return h, x
 
+
+
 #----------------------------------------------------------------------------
 # Main score network
 
@@ -183,6 +186,43 @@ class Score_Net(nn.Module):
         self.pair_j_embed = nn.Linear(node_in_dim, edge_dim, bias=False)
         self.positional_embed = nn.Linear(positional_embed_dim, edge_dim, bias=False)
         self.contact_embed = nn.Linear(contact_embed_dim, edge_dim, bias=False)
+
+        #Atom-> atom network
+        self.atom_atom_network = EGNN(
+            node_dim=node_dim, 
+            edge_dim=edge_dim, 
+            act_fn=nn.SiLU(), 
+            depth=depth, 
+            residual=True, 
+            attention=False, 
+            normalize=normalize, 
+            tanh=False,
+        )
+
+        #Atom -> ring network
+        self.atom_ring_network = EGNN(
+            node_dim=node_dim, 
+            edge_dim=edge_dim, 
+            act_fn=nn.SiLU(), 
+            depth=depth, 
+            residual=True, 
+            attention=False, 
+            normalize=False, 
+            tanh=False,
+        )
+
+        #ring -> ring network
+        self.ring_ring_network = EGNN(
+            node_dim=node_dim, 
+            edge_dim=edge_dim, 
+            act_fn=nn.SiLU(), 
+            depth=depth, 
+            residual=True, 
+            attention=False, 
+            normalize=normalize, 
+            tanh=False,
+        )
+
 
         # denoising score network
         self.network = EGNN(
@@ -252,30 +292,56 @@ class Score_Net(nn.Module):
             module.bias.data.zero_()
             module.weight.data.fill_(1.0)
         
-    def forward(self, rec_x, lig_x, rec_pos, lig_pos, t, contact_matrix, position_matrix, predict=False):
+    def forward(self, polymer, t, contact_matrix, position_matrix, predict=False):
         # set device
         self.device = t.device
 
         # get the current complex pose
-        lig_pos.requires_grad_()
-        pos = torch.cat([rec_pos, lig_pos], dim=0)
+        atom_pos = polymer.get_atom_coor()
+        atom_x = polymer.atom_onehot()
+
+        ring_pos = polymer.get_ring_coms()
+        ring_x = torch.zeros((len(ring_pos),self.node_dim))
+
+        ring_atom_edge = polymer.get_ring_atoms_edge();
+        atom_ring_edge = polymer.get_ring_atoms_edge(reverse=True)
+
+        pos = torch.cat([atom_pos,ring_pos],0)
+        x = torch.cat([atom_x,ring_x],0)
+        is_ring = torch.cat([torch.zeros(len(atom_pos)), torch.ones(len(ring_pos)) ],0)
+
+        #very simple dumb encoding. Should be changed for my boy but doesn't matter
+        edge_all = self.pair_i_embed(x)[None, :, :] + self.pair_j_embed(x)[:, None, :]
+        edge_atom = self.pair_i_embed(atom_x)[None, :, :] + self.pair_j_embed(atom_x)[:, None, :]
+        edge_ring = self.pair_i_embed(ring_x)[None, :, :] + self.pair_j_embed(ring_x)[:, None, :]
+
+        edge_atom_index, edge_atom_attr = self.get_knn_and_sample_graph(atom_pos[...,1,:], edge_atom)
+        edge_ring_index, edge_ring_attr = self.get_knn_and_sample_graph(ring_pos[...,1,:], edge_ring)
+        edge_ring_atom_index, edge_ring_atom_attr = self.get_ring_graph(atom_pos[...,1,:], edge_all)
+
+
+
+
+
+        #lig_pos.requires_grad_()
+        #pos = lig_pos
 
         # get ca distance matrix 
-        D = torch.norm((rec_pos[:, None, 1, :] - lig_pos[None, :, 1, :]), dim=-1)
+        #D = torch.norm((rec_pos[:, None, 1, :] - lig_pos[None, :, 1, :]), dim=-1)
 
         # node feature embedding
-        x = torch.cat([rec_x, lig_x], dim=0)
+        #x = lig_x
         node = self.single_embed(x) # [n, c]
 
         # edge feature embedding
-        edge = self.pair_i_embed(x)[None, :, :] + self.pair_j_embed(x)[:, None, :]
-        edge += self.positional_embed(position_matrix)
-        edge += self.contact_embed(contact_matrix.unsqueeze(-1)) # [n, n, c]
+        
+        #edge += self.positional_embed(position_matrix)
+        #edge += self.contact_embed(contact_matrix.unsqueeze(-1)) # [n, n, c]
 
         # TODO pair former
 
         # sample edge_index and get edge_attr
-        edge_index, edge_attr = self.get_knn_and_sample_graph(pos[..., 1, :], edge)
+        #edge_index, edge_attr = self.get_knn_and_sample_graph(pos[..., 1, :], edge)
 
         # main network 
         node_out, pos_out = self.network(node, pos[..., 1, :], edge_index, edge_attr) # [R+L, H]
