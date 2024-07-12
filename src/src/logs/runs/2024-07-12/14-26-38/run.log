@@ -1,0 +1,2 @@
+[2024-07-12 14:26:38,990][utils.utils][INFO] - Disabling python warnings! <config.ignore_warnings=True>
+[2024-07-12 14:26:39,017][train][INFO] - Instantiating datamodule <Torsion>

@@ -23,6 +23,7 @@ class ModelConfig:
     dropout: float = 0.0
     cut_off: float = 30.0
     normalize: bool = False
+    n_tor_bins: int
 
 #----------------------------------------------------------------------------
 # Helper functions
@@ -72,6 +73,10 @@ def get_knn_and_sample(points, knn=20, sample_size=40, epsilon=1e-10):
     
     return knn_indices, sampled_points_indices
 
+#def ang_to_rbf(p,n_bins):
+#    #encodings RBF = gaus(phi) = exp( (eps * (x - u) )^2 )
+#    self.rbf_dist_means = np.linspace(0,20,16)
+#    self.rbf_eps = (self.rbf_dist_means[-1] - self.rbf_dist_means[0]) / len(self.rbf_dist_means);
 
 #----------------------------------------------------------------------------
 # Modules
@@ -174,6 +179,7 @@ class Score_Net(nn.Module):
         depth = conf.depth
         dropout = conf.dropout
         normalize = conf.normalize
+        n_tor_bins = conf.n_tor_bins
         
         self.cut_off = conf.cut_off
         
@@ -273,11 +279,11 @@ class Score_Net(nn.Module):
 
         # rot_scale mlp
         self.tor_scale = nn.Sequential(
-            nn.Linear(inner_dim + 1, inner_dim, bias=False),
-            nn.LayerNorm(inner_dim),
+            nn.Linear(node_dim * 2 + 2, node_dim, bias=False),
+            nn.LayerNorm(node_dim),
             nn.Dropout(dropout),
             nn.SiLU(),
-            nn.Linear(inner_dim, 1, bias=False),
+            nn.Linear(node_dim, 1, bias=False),
             nn.Softplus()
         )
 
@@ -319,7 +325,8 @@ class Score_Net(nn.Module):
         edge_ring_index, edge_ring_attr = self.get_knn_and_sample_graph(ring_pos[...,1,:], edge_ring)
         edge_ring_atom_index, edge_ring_atom_attr = self.get_ring_graph(atom_pos[...,1,:], edge_all)
 
-
+        bonded_rings = polymer.edges
+        _, ang_diff = polymer.calc_normal_angles()
         
 
 
@@ -352,8 +359,11 @@ class Score_Net(nn.Module):
 
         #get outputs
         # torsion
-        tor = torch.cross(r, f, dim=-1).mean(dim=0, keepdim=True)
-
+        #tor = torch.cross(r, f, dim=-1).mean(dim=0, keepdim=True)
+        tor_pred = torch.zeros(len(bonded_rings))
+        for ii in range(len(bonded_rings)):
+            tor_pred[ii] = self.torsion_network(torch.cat([
+                node_ring[ bonded_rings[ii,0] ],node_ring[ bonded_rings[ii,1]], [torch.sin(ang_diff[ii]), torch.cos(ang_diff[ii])] ] ) )
 
 
         # energy
@@ -364,22 +374,24 @@ class Score_Net(nn.Module):
         #energy = (energy * mask_2D).sum() / (mask_2D.sum() + 1e-6) # [] E / kT
 
         # get translation and rotation vectors
-        lig_pos_curr = pos_out[rec_pos.size(0):] 
-        r = lig_pos[..., 1, :].detach()
-        f = lig_pos_curr - r # f / kT
+        #lig_pos_curr = pos_out[rec_pos.size(0):] 
+        #r = lig_pos[..., 1, :].detach()
+        #f = lig_pos_curr - r # f / kT
 
         # translation
-        tr_pred = f.mean(dim=0, keepdim=True)
+        #tr_pred = f.mean(dim=0, keepdim=True)
 
         # rotation
-        rot_pred = torch.cross(r, f, dim=-1).mean(dim=0, keepdim=True)
+        #rot_pred = torch.cross(r, f, dim=-1).mean(dim=0, keepdim=True)
 
         # scale
         t = self.t_embed(t)
-        tr_norm = torch.linalg.vector_norm(tr_pred, keepdim=True)
-        tr_pred = tr_pred / (tr_norm + 1e-6) * self.tr_scale(torch.cat([tr_norm, t], dim=-1))
-        rot_norm = torch.linalg.vector_norm(rot_pred, keepdim=True)
-        rot_pred = rot_pred / (rot_norm + 1e-6) * self.rot_scale(torch.cat([rot_norm, t], dim=-1))
+        tor_pred *= self.tor_scale(torch.cat([tor_pred,t], dim=-1))
+
+        #tr_norm = torch.linalg.vector_norm(tr_pred, keepdim=True)
+        #tr_pred = tr_pred / (tr_norm + 1e-6) * self.tr_scale(torch.cat([tr_norm, t], dim=-1))
+        #rot_norm = torch.linalg.vector_norm(rot_pred, keepdim=True)
+        #rot_pred = rot_pred / (rot_norm + 1e-6) * self.rot_scale(torch.cat([rot_norm, t], dim=-1))
 
         if predict:
             fa_rep = self.fa_rep(D).sum()
@@ -400,7 +412,8 @@ class Score_Net(nn.Module):
         dedx = -dedx[..., 1, :] # F / kT
         #"""
         
-        return energy, dedx, f, tr_pred, rot_pred
+        #return energy, dedx, f, tr_pred, rot_pred
+        return tor_pred
 
     def get_cross_graph(self, x, e, sep, num_self, num_cross):
         """cross graph from the complex pose"""
