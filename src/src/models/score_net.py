@@ -351,16 +351,17 @@ class Score_Net(nn.Module):
                 node_ring, pos[..., 1, :], edge_ring_index, edge_ring_attr)
 
         #get outputs
-
+        # torsion
+        tor = torch.cross(r, f, dim=-1).mean(dim=0, keepdim=True)
 
 
 
         # energy
-        h_rec = repeat(node_out[:rec_pos.size(0)], 'n h -> n m h', m=lig_pos.size(0))
-        h_lig = repeat(node_out[rec_pos.size(0):], 'm h -> n m h', n=rec_pos.size(0))
-        energy = self.to_energy(torch.cat([h_rec, h_lig], dim=-1)).squeeze(-1) # [R, L]
-        mask_2D = (D < self.cut_off).float() # [R, L]
-        energy = (energy * mask_2D).sum() / (mask_2D.sum() + 1e-6) # [] E / kT
+        #h_rec = repeat(node_out[:rec_pos.size(0)], 'n h -> n m h', m=lig_pos.size(0))
+        #h_lig = repeat(node_out[rec_pos.size(0):], 'm h -> n m h', n=rec_pos.size(0))
+        #energy = self.to_energy(torch.cat([h_rec, h_lig], dim=-1)).squeeze(-1) # [R, L]
+        #mask_2D = (D < self.cut_off).float() # [R, L]
+        #energy = (energy * mask_2D).sum() / (mask_2D.sum() + 1e-6) # [] E / kT
 
         # get translation and rotation vectors
         lig_pos_curr = pos_out[rec_pos.size(0):] 
@@ -385,6 +386,7 @@ class Score_Net(nn.Module):
             return energy, fa_rep, f, tr_pred, rot_pred
 
         # dedx
+        """
         dedx = torch.autograd.grad(
             outputs=energy, 
             inputs=lig_pos, 
@@ -394,8 +396,9 @@ class Score_Net(nn.Module):
             only_inputs=True, 
             allow_unused=True,
         )[0]
-
+        
         dedx = -dedx[..., 1, :] # F / kT
+        #"""
         
         return energy, dedx, f, tr_pred, rot_pred
 

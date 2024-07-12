@@ -2,7 +2,6 @@ name: capdock
 channels:
   - conda-forge
 dependencies:
-  - _libgcc_mutex
   - bzip2
   - ca-certificates
   - ld_impl_linux-64
