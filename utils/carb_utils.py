@@ -373,7 +373,8 @@ class poly():
         c = self.get_atom_coor()
         r = len(self)
 
-        edges = [];
+        edge_in = [];
+        edge_out = []
         curr_mono = 0
         curr_upper = len(self.mono[0])
         r = len(c)
@@ -384,10 +385,12 @@ class poly():
                 r += 1
 
             if reverse:
-                edges.append([r,jj])
+                edge_in.append(r)
+                edge_out.append(jj)
             else:
-                edges.append([jj,r])
-        return edges
+                edge_in.append(jj)
+                edge_out.append(r)
+        return edge_in, edge_out
 
 
 

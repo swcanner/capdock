@@ -320,6 +320,7 @@ class Score_Net(nn.Module):
         edge_ring_atom_index, edge_ring_atom_attr = self.get_ring_graph(atom_pos[...,1,:], edge_all)
 
 
+        
 
 
 
@@ -330,7 +331,6 @@ class Score_Net(nn.Module):
         #D = torch.norm((rec_pos[:, None, 1, :] - lig_pos[None, :, 1, :]), dim=-1)
 
         # node feature embedding
-        #x = lig_x
         node = self.single_embed(x) # [n, c]
 
         # edge feature embedding
@@ -343,8 +343,17 @@ class Score_Net(nn.Module):
         # sample edge_index and get edge_attr
         #edge_index, edge_attr = self.get_knn_and_sample_graph(pos[..., 1, :], edge)
 
-        # main network 
-        node_out, pos_out = self.network(node, pos[..., 1, :], edge_index, edge_attr) # [R+L, H]
+        # atom -> atomRing -> Ring
+        node_atom, pos = self.atom_atom_network(node, pos[..., 1, :], edge_atom_index, edge_atom_attr) # [R+L, H]
+        node_ring, pos = self.atom_ring_network(
+                node_atom, pos[..., 1, :], edge_ring_atom_index, edge_ring_atom_attr)
+        node_ring, pos = self.ring_ring_network(
+                node_ring, pos[..., 1, :], edge_ring_index, edge_ring_attr)
+
+        #get outputs
+
+
+
 
         # energy
         h_rec = repeat(node_out[:rec_pos.size(0)], 'n h -> n m h', m=lig_pos.size(0))
