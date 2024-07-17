@@ -1,0 +1,11 @@
+[2024-07-17 15:03:04,449][utils.utils][INFO] - Disabling python warnings! <config.ignore_warnings=True>
+[2024-07-17 15:03:04,475][train][INFO] - Instantiating datamodule <utils.utils.TorDataModule>
+[2024-07-17 15:03:04,476][train][INFO] - Instantiating model <models.score_net.Tor_Net>
+[2024-07-17 15:03:04,477][train][INFO] - Instantiating callback <pytorch_lightning.callbacks.ModelCheckpoint>
+[2024-07-17 15:03:04,479][train][INFO] - Instantiating logger <pytorch_lightning.loggers.wandb.WandbLogger>
+[2024-07-17 15:03:04,538][train][INFO] - Instantiating trainer <pytorch_lightning.Trainer>
+[2024-07-17 15:03:04,587][pytorch_lightning.utilities.rank_zero][INFO] - GPU available: False, used: False
+[2024-07-17 15:03:04,588][pytorch_lightning.utilities.rank_zero][INFO] - TPU available: False, using: 0 TPU cores
+[2024-07-17 15:03:04,588][pytorch_lightning.utilities.rank_zero][INFO] - HPU available: False, using: 0 HPUs
+[2024-07-17 15:03:04,589][train][INFO] - Logging hyperparameters!
+[2024-07-17 15:03:04,589][train][INFO] - Starting training!

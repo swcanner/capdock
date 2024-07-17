@@ -4,8 +4,8 @@ import torch.nn.functional as F
 import numpy as np
 from dataclasses import dataclass
 from einops import repeat
-from src.models.egnn import E_GCL
-from src.utils.coords6d import get_coords6d
+from models.egnn import E_GCL
+from utils.coords6d import get_coords6d
 
 #----------------------------------------------------------------------------
 # Data class for model config
@@ -23,7 +23,6 @@ class ModelConfig:
     dropout: float = 0.0
     cut_off: float = 30.0
     normalize: bool = False
-    n_tor_bins: int
 
 #----------------------------------------------------------------------------
 # Helper functions
@@ -163,7 +162,7 @@ class EGNN(nn.Module):
 #----------------------------------------------------------------------------
 # Main score network
 
-class Score_Net(nn.Module):
+class Tor_Net(nn.Module):
     """EGNN backbone for translation and rotation scores"""
     def __init__(
         self, 
@@ -179,7 +178,6 @@ class Score_Net(nn.Module):
         depth = conf.depth
         dropout = conf.dropout
         normalize = conf.normalize
-        n_tor_bins = conf.n_tor_bins
         
         self.cut_off = conf.cut_off
         

@@ -30,11 +30,14 @@ def train(config: DictConfig) -> Optional[float]:
 
     # Init lightning datamodule
     log.info(f"Instantiating datamodule <{config.datamodule._target_}>")
-    datamodule: LightningDataModule = hydra.utils.instantiate(config.datamodule)
+    datamodule: utils.utils.TorDataModule = hydra.utils.instantiate(config.datamodule)
+    print(datamodule)
 
     # Init lightning model
     log.info(f"Instantiating model <{config.model._target_}>")
+    print(config.model)
     model: LightningModule = hydra.utils.instantiate(config.model)
+    print(model)
 
     # Init lightning callbacks
     callbacks: List[Callback] = []
@@ -60,6 +63,7 @@ def train(config: DictConfig) -> Optional[float]:
 
     # Send some parameters from config to all lightning loggers
     log.info("Logging hyperparameters!")
+    '''
     utils.log_hyperparameters(
         config=config,
         model=model,
@@ -68,6 +72,7 @@ def train(config: DictConfig) -> Optional[float]:
         callbacks=callbacks,
         logger=logger,
     )
+    '''
 
     # Train the model
     log.info("Starting training!")

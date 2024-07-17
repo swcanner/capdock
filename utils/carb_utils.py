@@ -511,14 +511,16 @@ class poly():
     def calc_normal_angles(self):
         #calculates the difference between the normal vectors of connected monomers
         n = [];
+        diff_arr = [];
         for i in self.monos:
             n.append(i.get_normal())
         diff = np.zeros((len(self.monos),len(self.monos)))
         for c in range(len(self.edges)):
             for e in self.edges[c]:
                 diff[c,e] = np.arccos(n[c].dot(n[e])) #its normalized so fuck it
+                diff_arr.append(diff[c,e])
         self.angle_diff = diff
-        return diff;
+        return diff, diff_arr;
 
     #rotates all torsion angles
     def torsion_structure(self,dx,degrees=True):
