@@ -1,0 +1,63 @@
+[[36m2024-07-22 13:22:30,575[39m][[34mpytorch_lightning.callbacks.model_summary[39m][[32mINFO[39m] -
+  | Name | Type    | Params | Mode
+-----------------------------------------
+0 | net  | Tor_Net | 8.1 M  | train
+-----------------------------------------
+8.1 M     Trainable params
+16        Non-trainable params
+8.1 M     Total params
+32.224    Total estimated model params size (MB)
+Sanity Checking DataLoader 0:   0%|                                                                         | 0/1 [00:00<?, ?it/s]
+Error executing job with overrides: []
+Traceback (most recent call last):
+  File "/Users/scanner1/Downloads/capdock/src/src/run.py", line 39, in <module>
+    main()
+  File "/Users/scanner1/anaconda3/envs/capdock/lib/python3.9/site-packages/hydra/main.py", line 94, in decorated_main
+    _run_hydra(
+  File "/Users/scanner1/anaconda3/envs/capdock/lib/python3.9/site-packages/hydra/_internal/utils.py", line 394, in _run_hydra
+    _run_app(
+  File "/Users/scanner1/anaconda3/envs/capdock/lib/python3.9/site-packages/hydra/_internal/utils.py", line 457, in _run_app
+    run_and_report(
+  File "/Users/scanner1/anaconda3/envs/capdock/lib/python3.9/site-packages/hydra/_internal/utils.py", line 223, in run_and_report
+    raise ex
+  File "/Users/scanner1/anaconda3/envs/capdock/lib/python3.9/site-packages/hydra/_internal/utils.py", line 220, in run_and_report
+    return func()
+  File "/Users/scanner1/anaconda3/envs/capdock/lib/python3.9/site-packages/hydra/_internal/utils.py", line 458, in <lambda>
+    lambda: hydra.run(
+  File "/Users/scanner1/anaconda3/envs/capdock/lib/python3.9/site-packages/hydra/_internal/hydra.py", line 132, in run
+    _ = ret.return_value
+  File "/Users/scanner1/anaconda3/envs/capdock/lib/python3.9/site-packages/hydra/core/utils.py", line 260, in return_value
+    raise self._return_value
+  File "/Users/scanner1/anaconda3/envs/capdock/lib/python3.9/site-packages/hydra/core/utils.py", line 186, in run_job
+    ret.return_value = task_function(task_cfg)
+  File "/Users/scanner1/Downloads/capdock/src/src/run.py", line 35, in main
+    return train(config)
+  File "/Users/scanner1/Downloads/capdock/src/src/train.py", line 79, in train
+    trainer.fit(model=model, datamodule=datamodule, ckpt_path=config.ckpt_path)
+  File "/Users/scanner1/anaconda3/envs/capdock/lib/python3.9/site-packages/pytorch_lightning/trainer/trainer.py", line 543, in fit
+    call._call_and_handle_interrupt(
+  File "/Users/scanner1/anaconda3/envs/capdock/lib/python3.9/site-packages/pytorch_lightning/trainer/call.py", line 44, in _call_and_handle_interrupt
+    return trainer_fn(*args, **kwargs)
+  File "/Users/scanner1/anaconda3/envs/capdock/lib/python3.9/site-packages/pytorch_lightning/trainer/trainer.py", line 579, in _fit_impl
+    self._run(model, ckpt_path=ckpt_path)
+  File "/Users/scanner1/anaconda3/envs/capdock/lib/python3.9/site-packages/pytorch_lightning/trainer/trainer.py", line 986, in _run
+    results = self._run_stage()
+  File "/Users/scanner1/anaconda3/envs/capdock/lib/python3.9/site-packages/pytorch_lightning/trainer/trainer.py", line 1028, in _run_stage
+    self._run_sanity_check()
+  File "/Users/scanner1/anaconda3/envs/capdock/lib/python3.9/site-packages/pytorch_lightning/trainer/trainer.py", line 1057, in _run_sanity_check
+    val_loop.run()
+  File "/Users/scanner1/anaconda3/envs/capdock/lib/python3.9/site-packages/pytorch_lightning/loops/utilities.py", line 182, in _decorator
+    return loop_run(self, *args, **kwargs)
+  File "/Users/scanner1/anaconda3/envs/capdock/lib/python3.9/site-packages/pytorch_lightning/loops/evaluation_loop.py", line 135, in run
+    self._evaluation_step(batch, batch_idx, dataloader_idx, dataloader_iter)
+  File "/Users/scanner1/anaconda3/envs/capdock/lib/python3.9/site-packages/pytorch_lightning/loops/evaluation_loop.py", line 396, in _evaluation_step
+    output = call._call_strategy_hook(trainer, hook_name, *step_args)
+  File "/Users/scanner1/anaconda3/envs/capdock/lib/python3.9/site-packages/pytorch_lightning/trainer/call.py", line 311, in _call_strategy_hook
+    output = fn(*args, **kwargs)
+  File "/Users/scanner1/anaconda3/envs/capdock/lib/python3.9/site-packages/pytorch_lightning/strategies/strategy.py", line 411, in validation_step
+    return self.lightning_module.validation_step(*args, **kwargs)
+  File "/Users/scanner1/Downloads/capdock/src/src/models/score_model.py", line 418, in validation_step
+    losses = self.step(batch, batch_idx)
+  File "/Users/scanner1/Downloads/capdock/src/src/models/score_model.py", line 393, in step
+    polymer = batch['polymer']
+TypeError: list indices must be integers or slices, not str

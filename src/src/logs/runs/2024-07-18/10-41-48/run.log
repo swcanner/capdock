@@ -1,0 +1,3 @@
+[2024-07-18 10:41:49,025][utils.utils][INFO] - Disabling python warnings! <config.ignore_warnings=True>
+[2024-07-18 10:41:49,043][train][INFO] - Instantiating datamodule <utils.utils.TorDataModule>
+[2024-07-18 10:41:49,044][train][INFO] - Instantiating model <models.score_model.Tor_Model>

@@ -10,8 +10,10 @@ from torch_geometric.loader import DataLoader
 from omegaconf import DictConfig
 from models.score_net import Tor_Net
 from utils.so3_diffuser import SO3Diffuser 
+from utils.tor_diffuser import TorDiffuser 
 from utils.r3_diffuser import R3Diffuser 
 from utils.geometry import axis_angle_to_matrix
+from carb_utils import *
 #from data.docking_dataset import DockingDataset
 
 #----------------------------------------------------------------------------
@@ -255,7 +257,7 @@ class Tor_Model(pl.LightningModule):
             self.r3_diffuser = R3Diffuser(diffuser.r3)
         if self.perturb_rot:
             self.so3_diffuser = SO3Diffuser(diffuser.so3)
-        if self.perturb_rot:
+        if self.perturb_tor:
             self.tor_diffuser = TorDiffuser(diffuser.tor)
 
         # net
@@ -272,7 +274,7 @@ class Tor_Model(pl.LightningModule):
 
         return tor_pred
 
-    def loss_fn(self, rec_x, lig_x, rec_pos, lig_pos, contact_matrix, position_matrix, eps=1e-5):
+    def loss_fn(self, polymer, eps=1e-5):
         with torch.no_grad():
             # uniformly sample a timestep
             t = torch.rand(1, device=self.device) * (1. - eps) + eps
@@ -298,6 +300,7 @@ class Tor_Model(pl.LightningModule):
 
             if self.perturb_tor:
                 tor_score_scale = self.tor_diffuser.score_scaling(t.item())
+                print(t.item())
                 tor_update, tor_score_gt = self.tor_diffuser.forward_marginal(t.item())
                 tor_update = torch.from_numpy(tor_update).float().to(self.device)
                 tor_score_gt = torch.from_numpy(tor_score_gt).float().to(self.device)
@@ -306,34 +309,17 @@ class Tor_Model(pl.LightningModule):
                 tor_update = torch.from_numpy(tor_update).float().to(self.device)
 
             # update poses
-            lig_pos = self.modify_coords(lig_pos, rot_update, tr_update, tor_update)
+            polymer = self.modify_coords(polymer, tr_update, rot_update, tor_update)
+            
             
             # move the lig center to origin
-            center = lig_pos[..., 1, :].mean(dim=0)
-            rec_pos = rec_pos - center
-            lig_pos = lig_pos - center
+            #center = lig_pos[..., 1, :].mean(dim=0)
+            #rec_pos = rec_pos - center
+            #lig_pos = lig_pos - center
 
         # predict score based on the current state
-        if self.grad_energy:
-            energy, dedx, f, tr_score, rot_score = self.net(rec_x, lig_x, rec_pos, lig_pos, t, contact_matrix, position_matrix)
-            # energy conservation loss
-            if self.separate_energy_loss:
-                f_angle = torch.norm(f, dim=-1, keepdim=True)
-                f_axis = f / (f_angle + 1e-6)
+        tor_score = self.net(polymer, t)
 
-                dedx_angle = torch.norm(dedx, dim=-1, keepdim=True)
-                dedx_axis = dedx / (dedx_angle + 1e-6)
-
-                ec_axis_loss = torch.mean((f_axis - dedx_axis)**2)
-                ec_angle_loss = torch.mean((f_angle - dedx_angle)**2)
-                ec_loss = 0.5 * (ec_axis_loss + ec_angle_loss)
-                
-            else:
-                ec_loss = torch.mean((dedx - f)**2)
-        else:
-            energy, fa_rep, f, tr_score, rot_score = self.net(rec_x, lig_x, rec_pos, lig_pos, t, contact_matrix, position_matrix, predict=True)
-            # energy conservation loss
-            ec_loss = torch.tensor(0.0, device=self.device)
         
         # calculate losses
         if self.perturb_tr:
@@ -353,6 +339,7 @@ class Tor_Model(pl.LightningModule):
         else:
             tr_loss = torch.tensor(0.0, device=self.device)
 
+
         if self.perturb_rot:
             if self.separate_rot_loss:
                 gt_rot_angle = torch.norm(rot_score_gt, dim=-1, keepdim=True)
@@ -370,29 +357,116 @@ class Tor_Model(pl.LightningModule):
         else:
             rot_loss = torch.tensor(0.0, device=self.device)
 
+        if self.perturb_tor:
+            if self.separate_rot_loss:
+                gt_tor_angle = torch.norm(tor_score_gt, dim=-1, keepdim=True)
+                #gt_tor_axis = tor_score_gt / (gt_tor_angle + 1e-6)
+
+                pred_tor_angle = torch.norm(tor_score, dim=-1, keepdim=True)
+                #pred_rot_axis = rot_score / (pred_rot_angle + 1e-6)
+
+                #rot_axis_loss = torch.mean((pred_rot_axis - gt_rot_axis)**2)
+                tor_angle_loss = torch.mean((pred_tor_angle - gt_tor_angle)**2 / tor_score_scale**2)
+                tor_loss = tor_angle_loss
+
+            else:
+                tor_loss = torch.mean((tor_score - gt_tor_angle)**2 / tor_score_scale**2)
+        else:
+            tor_loss = torch.tensor(0.0, device=self.device)
+
         # total losses
-        loss = tr_loss + rot_loss + ec_loss
-        losses = {"tr_loss": tr_loss, "rot_loss": rot_loss, "ec_loss": ec_loss, "loss": loss}
+        loss = tr_loss + rot_loss + tor_loss
+        losses = {"tr_loss": tr_loss, "rot_loss": rot_loss, "tor_loss": tor_loss, "loss": loss}
 
         return losses
 
     def modify_coords(self, polymer, d_x, d_rot, d_tor):
+        print(d_x, d_rot, d_tor)
         polymer.translation(d_x)
         polymer.euler_rotation(d_rot)
         polymer.torsion_structure(d_tor)
         return polymer
 
+    def chain_to_poly(self, my_chain, coor, res):
+        """
+        params:
+            chain (str): chain identifier
+            coor (arr n x 3): coordinates
+            res (arr n x 4): residue information of each atom (aname, resnum, chain, resname)
+        return:
+            polymer
+        """
+
+        #print(my_chain)
+        #print(coor)
+        #print(res)
+
+        polymer = []
+        c_resnum = -1;
+        c_resname = ''
+        n = []
+        c = []
+        print(len(res))
+        
+        for i in range(len(res)):
+            ii = res[i]
+            aname = ii[0]
+            resnum = ii[1]
+            chain = ii[2]
+            resname = ii[3]
+            
+            
+
+            if c_resnum != resnum:
+                if c_resnum != -1 and len(n) > 1:
+                    #print(str(c_resnum),c_resname,np.array(c),n)
+                    m = mono(str(c_resnum),c_resname,np.array(c),n)
+                    polymer.append(m)
+                #reset
+                c_resnum = resnum;
+                c_resname = resname
+                n = []
+                c = []
+
+            #if chain == my_chain:
+            if True:
+
+                n.append(aname)
+                c.append(coor[i].cpu().detach().numpy())
+
+        
+        if len(n) > 1:
+            m = mono(str(c_resnum),c_resname,np.array(c),n)
+            print(c_resnum,c_resname,np.array(c),n)
+            polymer.append(m)
+
+
+
+        return poly(polymer)
+
+
     def step(self, batch, batch_idx):
-        rec_x = batch['rec_x'].squeeze(0)
-        lig_x = batch['lig_x'].squeeze(0)
-        rec_pos = batch['rec_pos'].squeeze(0)
-        lig_pos = batch['lig_pos'].squeeze(0)
-        contact_matrix = batch['contact_matrix'].squeeze(0)
-        position_matrix = batch['position_matrix'].squeeze(0)
+        #rec_x = batch['rec_x'].squeeze(0)
+        #lig_x = batch['lig_x'].squeeze(0)
+        #rec_pos = batch['rec_pos'].squeeze(0)
+        #lig_pos = batch['lig_pos'].squeeze(0)
+        #contact_matrix = batch['contact_matrix'].squeeze(0)
+        #position_matrix = batch['position_matrix'].squeeze(0)
+        #print(batch)
+
+        #print(batch[0], batch[1], batch[2])
+
+        print(np.shape(batch[0]), np.shape(batch[1]), np.shape(batch[2]))
+        #print(batch[0][0])
+        #print(batch[1][0,...])
+        #print(batch[2])
+        polymer = self.chain_to_poly(batch[0][0], batch[1][0,...], batch[2])
 
         # get losses
-        losses = self.loss_fn(rec_x, lig_x, rec_pos, lig_pos, contact_matrix, position_matrix)
+        losses = self.loss_fn(polymer)
         return losses
+
+    
 
     def training_step(self, batch, batch_idx):
         losses = self.step(batch, batch_idx)

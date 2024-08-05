@@ -1,0 +1,56 @@
+[[36m2024-07-22 13:09:02,522[39m][[34mpytorch_lightning.callbacks.model_summary[39m][[32mINFO[39m] -
+  | Name | Type    | Params | Mode
+-----------------------------------------
+0 | net  | Tor_Net | 8.1 M  | train
+-----------------------------------------
+8.1 M     Trainable params
+16        Non-trainable params
+8.1 M     Total params
+32.224    Total estimated model params size (MB)
+Sanity Checking: |                                                                                          | 0/? [00:00<?, ?it/s]
+Error executing job with overrides: []
+Traceback (most recent call last):
+  File "/Users/scanner1/Downloads/capdock/src/src/run.py", line 33, in main
+    return train(config)
+  File "/Users/scanner1/Downloads/capdock/src/src/train.py", line 79, in train
+    trainer.fit(model=model, datamodule=datamodule, ckpt_path=config.ckpt_path)
+  File "/Users/scanner1/anaconda3/envs/capdock/lib/python3.9/site-packages/pytorch_lightning/trainer/trainer.py", line 543, in fit
+    call._call_and_handle_interrupt(
+  File "/Users/scanner1/anaconda3/envs/capdock/lib/python3.9/site-packages/pytorch_lightning/trainer/call.py", line 44, in _call_and_handle_interrupt
+    return trainer_fn(*args, **kwargs)
+  File "/Users/scanner1/anaconda3/envs/capdock/lib/python3.9/site-packages/pytorch_lightning/trainer/trainer.py", line 579, in _fit_impl
+    self._run(model, ckpt_path=ckpt_path)
+  File "/Users/scanner1/anaconda3/envs/capdock/lib/python3.9/site-packages/pytorch_lightning/trainer/trainer.py", line 986, in _run
+    results = self._run_stage()
+  File "/Users/scanner1/anaconda3/envs/capdock/lib/python3.9/site-packages/pytorch_lightning/trainer/trainer.py", line 1028, in _run_stage
+    self._run_sanity_check()
+  File "/Users/scanner1/anaconda3/envs/capdock/lib/python3.9/site-packages/pytorch_lightning/trainer/trainer.py", line 1057, in _run_sanity_check
+    val_loop.run()
+  File "/Users/scanner1/anaconda3/envs/capdock/lib/python3.9/site-packages/pytorch_lightning/loops/utilities.py", line 182, in _decorator
+    return loop_run(self, *args, **kwargs)
+  File "/Users/scanner1/anaconda3/envs/capdock/lib/python3.9/site-packages/pytorch_lightning/loops/evaluation_loop.py", line 128, in run
+    batch, batch_idx, dataloader_idx = next(data_fetcher)
+  File "/Users/scanner1/anaconda3/envs/capdock/lib/python3.9/site-packages/pytorch_lightning/loops/fetchers.py", line 133, in __next__
+    batch = super().__next__()
+  File "/Users/scanner1/anaconda3/envs/capdock/lib/python3.9/site-packages/pytorch_lightning/loops/fetchers.py", line 60, in __next__
+    batch = next(self.iterator)
+  File "/Users/scanner1/anaconda3/envs/capdock/lib/python3.9/site-packages/pytorch_lightning/utilities/combined_loader.py", line 341, in __next__
+    out = next(self._iterator)
+  File "/Users/scanner1/anaconda3/envs/capdock/lib/python3.9/site-packages/pytorch_lightning/utilities/combined_loader.py", line 142, in __next__
+    out = next(self.iterators[0])
+  File "/Users/scanner1/anaconda3/envs/capdock/lib/python3.9/site-packages/torch/utils/data/dataloader.py", line 631, in __next__
+    data = self._next_data()
+  File "/Users/scanner1/anaconda3/envs/capdock/lib/python3.9/site-packages/torch/utils/data/dataloader.py", line 675, in _next_data
+    data = self._dataset_fetcher.fetch(index)  # may raise StopIteration
+  File "/Users/scanner1/anaconda3/envs/capdock/lib/python3.9/site-packages/torch/utils/data/_utils/fetch.py", line 49, in fetch
+    data = self.dataset.__getitems__(possibly_batched_index)
+  File "/Users/scanner1/anaconda3/envs/capdock/lib/python3.9/site-packages/torch/utils/data/dataset.py", line 419, in __getitems__
+    return [self.dataset[self.indices[idx]] for idx in indices]
+  File "/Users/scanner1/anaconda3/envs/capdock/lib/python3.9/site-packages/torch/utils/data/dataset.py", line 419, in <listcomp>
+    return [self.dataset[self.indices[idx]] for idx in indices]
+  File "/Users/scanner1/Downloads/capdock/src/src/utils/utils.py", line 194, in __getitem__
+    polymer = self.chain_to_poly(chain_name,coor,resid)
+  File "/Users/scanner1/Downloads/capdock/src/src/utils/utils.py", line 273, in chain_to_poly
+    m = mono(str(c_resnum),c_resname,np.array(c),n)
+NameError: name 'mono' is not defined
+Set the environment variable HYDRA_FULL_ERROR=1 for a complete stack trace.

@@ -1,0 +1,5 @@
+[2024-07-18 10:49:33,794][utils.utils][INFO] - Disabling python warnings! <config.ignore_warnings=True>
+[2024-07-18 10:49:33,814][train][INFO] - Instantiating datamodule <utils.utils.TorDataModule>
+[2024-07-18 10:49:33,815][train][INFO] - Instantiating model <models.score_model.Tor_Model>
+[2024-07-18 10:49:34,301][train][INFO] - Instantiating callback <pytorch_lightning.callbacks.ModelCheckpoint>
+[2024-07-18 10:49:34,303][train][INFO] - Instantiating logger <pytorch_lightning.loggers.wandb.WandbLogger>

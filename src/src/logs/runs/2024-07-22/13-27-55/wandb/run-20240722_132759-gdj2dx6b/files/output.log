@@ -1,0 +1,110 @@
+Error executing job with overrides: []
+Traceback (most recent call last):
+  File "/Users/scanner1/Downloads/capdock/src/src/run.py", line 39, in <module>
+    main()
+  File "/Users/scanner1/anaconda3/envs/capdock/lib/python3.9/site-packages/hydra/main.py", line 94, in decorated_main
+    _run_hydra(
+  File "/Users/scanner1/anaconda3/envs/capdock/lib/python3.9/site-packages/hydra/_internal/utils.py", line 394, in _run_hydra
+    _run_app(
+  File "/Users/scanner1/anaconda3/envs/capdock/lib/python3.9/site-packages/hydra/_internal/utils.py", line 457, in _run_app
+    run_and_report(
+  File "/Users/scanner1/anaconda3/envs/capdock/lib/python3.9/site-packages/hydra/_internal/utils.py", line 223, in run_and_report
+    raise ex
+  File "/Users/scanner1/anaconda3/envs/capdock/lib/python3.9/site-packages/hydra/_internal/utils.py", line 220, in run_and_report
+    return func()
+  File "/Users/scanner1/anaconda3/envs/capdock/lib/python3.9/site-packages/hydra/_internal/utils.py", line 458, in <lambda>
+    lambda: hydra.run(
+  File "/Users/scanner1/anaconda3/envs/capdock/lib/python3.9/site-packages/hydra/_internal/hydra.py", line 132, in run
+    _ = ret.return_value
+  File "/Users/scanner1/anaconda3/envs/capdock/lib/python3.9/site-packages/hydra/core/utils.py", line 260, in return_value
+    raise self._return_value
+  File "/Users/scanner1/anaconda3/envs/capdock/lib/python3.9/site-packages/hydra/core/utils.py", line 186, in run_job
+    ret.return_value = task_function(task_cfg)
+  File "/Users/scanner1/Downloads/capdock/src/src/run.py", line 35, in main
+    return train(config)
+  File "/Users/scanner1/Downloads/capdock/src/src/train.py", line 79, in train
+    trainer.fit(model=model, datamodule=datamodule, ckpt_path=config.ckpt_path)
+  File "/Users/scanner1/anaconda3/envs/capdock/lib/python3.9/site-packages/pytorch_lightning/trainer/trainer.py", line 543, in fit
+    call._call_and_handle_interrupt(
+  File "/Users/scanner1/anaconda3/envs/capdock/lib/python3.9/site-packages/pytorch_lightning/trainer/call.py", line 44, in _call_and_handle_interrupt
+    return trainer_fn(*args, **kwargs)
+  File "/Users/scanner1/anaconda3/envs/capdock/lib/python3.9/site-packages/pytorch_lightning/trainer/trainer.py", line 579, in _fit_impl
+    self._run(model, ckpt_path=ckpt_path)
+  File "/Users/scanner1/anaconda3/envs/capdock/lib/python3.9/site-packages/pytorch_lightning/trainer/trainer.py", line 986, in _run
+    results = self._run_stage()
+  File "/Users/scanner1/anaconda3/envs/capdock/lib/python3.9/site-packages/pytorch_lightning/trainer/trainer.py", line 1028, in _run_stage
+    self._run_sanity_check()
+  File "/Users/scanner1/anaconda3/envs/capdock/lib/python3.9/site-packages/pytorch_lightning/trainer/trainer.py", line 1057, in _run_sanity_check
+    val_loop.run()
+  File "/Users/scanner1/anaconda3/envs/capdock/lib/python3.9/site-packages/pytorch_lightning/loops/utilities.py", line 182, in _decorator
+    return loop_run(self, *args, **kwargs)
+  File "/Users/scanner1/anaconda3/envs/capdock/lib/python3.9/site-packages/pytorch_lightning/loops/evaluation_loop.py", line 135, in run
+    self._evaluation_step(batch, batch_idx, dataloader_idx, dataloader_iter)
+  File "/Users/scanner1/anaconda3/envs/capdock/lib/python3.9/site-packages/pytorch_lightning/loops/evaluation_loop.py", line 396, in _evaluation_step
+    output = call._call_strategy_hook(trainer, hook_name, *step_args)
+  File "/Users/scanner1/anaconda3/envs/capdock/lib/python3.9/site-packages/pytorch_lightning/trainer/call.py", line 311, in _call_strategy_hook
+    output = fn(*args, **kwargs)
+  File "/Users/scanner1/anaconda3/envs/capdock/lib/python3.9/site-packages/pytorch_lightning/strategies/strategy.py", line 411, in validation_step
+    return self.lightning_module.validation_step(*args, **kwargs)
+  File "/Users/scanner1/Downloads/capdock/src/src/models/score_model.py", line 475, in validation_step
+    losses = self.step(batch, batch_idx)
+  File "/Users/scanner1/Downloads/capdock/src/src/models/score_model.py", line 448, in step
+    polymer = self.chain_to_poly(batch[0], batch[1], batch[2])
+  File "/Users/scanner1/Downloads/capdock/src/src/models/score_model.py", line 428, in chain_to_poly
+    c.append(coor[i])
+IndexError: index 23 is out of bounds for dimension 0 with size 1
+[[36m2024-07-22 13:28:01,998[39m][[34mpytorch_lightning.callbacks.model_summary[39m][[32mINFO[39m] -
+  | Name | Type    | Params | Mode
+-----------------------------------------
+0 | net  | Tor_Net | 8.1 M  | train
+-----------------------------------------
+8.1 M     Trainable params
+16        Non-trainable params
+8.1 M     Total params
+32.224    Total estimated model params size (MB)
+Sanity Checking DataLoader 0:   0%|                                                                         | 0/1 [00:00<?, ?it/s]('E',) tensor([[[18.1710, 28.7810, 17.2860],
+         [19.3020, 27.9840, 18.0010],
+         [19.6240, 28.8280, 19.4080],
+         [20.1200, 30.2660, 19.0390],
+         [19.0760, 31.0040, 18.1150],
+         [19.5880, 32.3310, 17.5120],
+         [18.8520, 26.6720, 18.3460],
+         [20.6680, 28.1260, 20.0700],
+         [20.3510, 30.9830, 20.2590],
+         [18.6850, 30.1390, 16.9780],
+         [20.9070, 32.1940, 16.9880],
+         [15.4050, 27.1570, 17.1500],
+         [15.6090, 28.6300, 17.6320],
+         [14.4990, 29.1370, 18.5780],
+         [14.4590, 30.6370, 18.2860],
+         [14.8260, 30.7110, 16.7780],
+         [15.7570, 31.8550, 16.3310],
+         [16.0450, 26.8650, 15.9010],
+         [16.9710, 28.8590, 18.1450],
+         [14.7330, 28.8700, 19.9640],
+         [13.1810, 31.1820, 18.6190],
+         [15.4820, 29.4600, 16.4580],
+         [16.0010, 31.7330, 14.9330],
+         [-0.5450, 23.8070, 50.9460],
+         [ 0.1250, 22.7190, 50.0430],
+         [-0.8210, 22.6370, 48.6740],
+         [-2.2680, 22.1990, 49.0700],
+         [-2.8690, 23.1560, 50.1650],
+         [-4.1880, 22.6420, 50.7780],
+         [ 1.4430, 23.1120, 49.6540],
+         [-0.2410, 21.6430, 47.8420],
+         [-3.0650, 22.1790, 47.8740],
+         [-1.9090, 23.3340, 51.2820],
+         [-5.1760, 23.6700, 50.7800],
+         [ 1.1800, 26.6180, 51.1470],
+         [-0.3520, 26.3980, 50.9400],
+         [-1.1110, 27.6110, 50.3280],
+         [-2.4720, 27.5580, 51.0170],
+         [-2.1190, 27.0450, 52.4290],
+         [-3.1760, 26.1650, 53.1290],
+         [ 1.7890, 27.4080, 50.1120],
+         [-0.6140, 25.1150, 50.2520],
+         [-1.2460, 27.5850, 48.9020],
+         [-3.1110, 28.8350, 50.9890],
+         [-0.9010, 26.2700, 52.2760],
+         [-2.6940, 25.7820, 54.4140]]], device='mps:0') [[('C1',), ('1',), ('D',), ('GLC',)], [('C2',), ('1',), ('D',), ('GLC',)], [('C3',), ('1',), ('D',), ('GLC',)], [('C4',), ('1',), ('D',), ('GLC',)], [('C5',), ('1',), ('D',), ('GLC',)], [('C6',), ('1',), ('D',), ('GLC',)], [('O2',), ('1',), ('D',), ('GLC',)], [('O3',), ('1',), ('D',), ('GLC',)], [('O4',), ('1',), ('D',), ('GLC',)], [('O5',), ('1',), ('D',), ('GLC',)], [('O6',), ('1',), ('D',), ('GLC',)], [('C1',), ('2',), ('D',), ('FRU',)], [('C2',), ('2',), ('D',), ('FRU',)], [('C3',), ('2',), ('D',), ('FRU',)], [('C4',), ('2',), ('D',), ('FRU',)], [('C5',), ('2',), ('D',), ('FRU',)], [('C6',), ('2',), ('D',), ('FRU',)], [('O1',), ('2',), ('D',), ('FRU',)], [('O2',), ('2',), ('D',), ('FRU',)], [('O3',), ('2',), ('D',), ('FRU',)], [('O4',), ('2',), ('D',), ('FRU',)], [('O5',), ('2',), ('D',), ('FRU',)], [('O6',), ('2',), ('D',), ('FRU',)], [('C1',), ('1',), ('E',), ('GLC',)], [('C2',), ('1',), ('E',), ('GLC',)], [('C3',), ('1',), ('E',), ('GLC',)], [('C4',), ('1',), ('E',), ('GLC',)], [('C5',), ('1',), ('E',), ('GLC',)], [('C6',), ('1',), ('E',), ('GLC',)], [('O2',), ('1',), ('E',), ('GLC',)], [('O3',), ('1',), ('E',), ('GLC',)], [('O4',), ('1',), ('E',), ('GLC',)], [('O5',), ('1',), ('E',), ('GLC',)], [('O6',), ('1',), ('E',), ('GLC',)], [('C1',), ('2',), ('E',), ('FRU',)], [('C2',), ('2',), ('E',), ('FRU',)], [('C3',), ('2',), ('E',), ('FRU',)], [('C4',), ('2',), ('E',), ('FRU',)], [('C5',), ('2',), ('E',), ('FRU',)], [('C6',), ('2',), ('E',), ('FRU',)], [('O1',), ('2',), ('E',), ('FRU',)], [('O2',), ('2',), ('E',), ('FRU',)], [('O3',), ('2',), ('E',), ('FRU',)], [('O4',), ('2',), ('E',), ('FRU',)], [('O5',), ('2',), ('E',), ('FRU',)], [('O6',), ('2',), ('E',), ('FRU',)]]

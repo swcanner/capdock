@@ -1,0 +1,20 @@
+[2024-07-22 13:35:24,384][utils.utils][INFO] - Disabling python warnings! <config.ignore_warnings=True>
+[2024-07-22 13:35:24,423][train][INFO] - Instantiating datamodule <utils.utils.TorDataModule>
+[2024-07-22 13:35:24,425][train][INFO] - Instantiating model <models.score_model.Tor_Model>
+[2024-07-22 13:35:24,780][train][INFO] - Instantiating callback <pytorch_lightning.callbacks.ModelCheckpoint>
+[2024-07-22 13:35:24,782][train][INFO] - Instantiating logger <pytorch_lightning.loggers.wandb.WandbLogger>
+[2024-07-22 13:35:24,820][train][INFO] - Instantiating trainer <pytorch_lightning.Trainer>
+[2024-07-22 13:35:24,870][pytorch_lightning.utilities.rank_zero][INFO] - GPU available: True (mps), used: True
+[2024-07-22 13:35:24,870][pytorch_lightning.utilities.rank_zero][INFO] - TPU available: False, using: 0 TPU cores
+[2024-07-22 13:35:24,870][pytorch_lightning.utilities.rank_zero][INFO] - HPU available: False, using: 0 HPUs
+[2024-07-22 13:35:24,870][train][INFO] - Logging hyperparameters!
+[2024-07-22 13:35:24,870][train][INFO] - Starting training!
+[2024-07-22 13:35:28,510][pytorch_lightning.callbacks.model_summary][INFO] - 
+  | Name | Type    | Params | Mode 
+-----------------------------------------
+0 | net  | Tor_Net | 8.1 M  | train
+-----------------------------------------
+8.1 M     Trainable params
+16        Non-trainable params
+8.1 M     Total params
+32.224    Total estimated model params size (MB)

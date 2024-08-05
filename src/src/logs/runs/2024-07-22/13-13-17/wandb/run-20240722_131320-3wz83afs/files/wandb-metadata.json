@@ -1,0 +1,49 @@
+{
+    "os": "macOS-14.1.2-arm64-arm-64bit",
+    "python": "3.9.19",
+    "heartbeatAt": "2024-07-22T17:13:21.364319",
+    "startedAt": "2024-07-22T17:13:20.269731",
+    "docker": null,
+    "cuda": null,
+    "args": [],
+    "state": "running",
+    "program": "/Users/scanner1/Downloads/capdock/src/src/run.py",
+    "codePathLocal": null,
+    "codePath": "src/src/run.py",
+    "git": {
+        "remote": "git@github.com:swcanner/capdock.git",
+        "commit": "50c64be7aa65bf5cbb5e8cb733c6da66fbfaf808"
+    },
+    "email": null,
+    "root": "/Users/scanner1/Downloads/capdock",
+    "host": "Sams-MacBook-Air.local",
+    "username": "scanner1",
+    "executable": "/Users/scanner1/anaconda3/envs/capdock/bin/python",
+    "cpu_count": 8,
+    "cpu_count_logical": 8,
+    "cpu_freq": {
+        "current": 3504,
+        "min": 600,
+        "max": 3504
+    },
+    "cpu_freq_per_core": [
+        {
+            "current": 3504,
+            "min": 600,
+            "max": 3504
+        }
+    ],
+    "disk": {
+        "/": {
+            "total": 460.4317207336426,
+            "used": 13.481945037841797
+        }
+    },
+    "gpuapple": {
+        "type": "arm",
+        "vendor": "Apple"
+    },
+    "memory": {
+        "total": 16.0
+    }
+}

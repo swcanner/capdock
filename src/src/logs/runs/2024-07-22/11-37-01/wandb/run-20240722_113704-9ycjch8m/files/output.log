@@ -1,0 +1,20 @@
+Error executing job with overrides: []
+Traceback (most recent call last):
+  File "/Users/scanner1/Downloads/capdock/src/src/run.py", line 33, in main
+    return train(config)
+  File "/Users/scanner1/Downloads/capdock/src/src/train.py", line 79, in train
+    trainer.fit(model=model, datamodule=datamodule, ckpt_path=config.ckpt_path)
+  File "/Users/scanner1/anaconda3/envs/capdock/lib/python3.9/site-packages/pytorch_lightning/trainer/trainer.py", line 543, in fit
+    call._call_and_handle_interrupt(
+  File "/Users/scanner1/anaconda3/envs/capdock/lib/python3.9/site-packages/pytorch_lightning/trainer/call.py", line 44, in _call_and_handle_interrupt
+    return trainer_fn(*args, **kwargs)
+  File "/Users/scanner1/anaconda3/envs/capdock/lib/python3.9/site-packages/pytorch_lightning/trainer/trainer.py", line 579, in _fit_impl
+    self._run(model, ckpt_path=ckpt_path)
+  File "/Users/scanner1/anaconda3/envs/capdock/lib/python3.9/site-packages/pytorch_lightning/trainer/trainer.py", line 948, in _run
+    call._call_setup_hook(self)  # allow user to set up LightningModule in accelerator environment
+  File "/Users/scanner1/anaconda3/envs/capdock/lib/python3.9/site-packages/pytorch_lightning/trainer/call.py", line 94, in _call_setup_hook
+    _call_lightning_datamodule_hook(trainer, "setup", stage=fn)
+  File "/Users/scanner1/anaconda3/envs/capdock/lib/python3.9/site-packages/pytorch_lightning/trainer/call.py", line 181, in _call_lightning_datamodule_hook
+    return fn(*args, **kwargs)
+TypeError: setup() got an unexpected keyword argument 'stage'
+Set the environment variable HYDRA_FULL_ERROR=1 for a complete stack trace.

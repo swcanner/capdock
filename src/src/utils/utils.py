@@ -7,12 +7,17 @@ import rich.syntax
 import rich.tree
 from omegaconf import DictConfig, OmegaConf
 from pytorch_lightning.utilities import rank_zero_only
+from Bio.PDB import *
+
+from carb_utils import *
 
 import torch.utils.data as data
+import torch
 
 import pandas as pd
 import numpy as np
 
+parser=PDBParser()
 
 def get_logger(name=__name__) -> logging.Logger:
     """Initializes multi-GPU-friendly python command line logger."""
@@ -188,119 +193,120 @@ class Tor_Dataset(data.Dataset):
         chain_name = self.data.iloc[idx,1]
 
         coor, resid = self.get_coor(pdb_name)
-        polymer = self.chain_to_poly(chain_name,coor,resid)
+        #polymer = self.chain_to_poly(chain_name,coor,resid)
         
-        return polymer
+        return chain_name, coor, resid
 
-        def get_coor(self,pdb):
-            """
-            Arguments:
-                pdb (str): pdb file to read in
-            Returns:
-                coor (arr): 3D cartesian coordinates
-                resid (arr): Residue atom names [atom_name, residue_num, chain_name, res_name]
-            """
-            structure=parser.get_structure("carb", self.data_dir + pdb)
-            coor = []
-            resid = []
-            
-            models = structure.get_models()
-            models = list(models)
-            if len(models) == 0:
-                return [],[];
-            
-            for m in range(len(models)):
-                chains = list(models[m].get_chains())
-                for c in range(len(chains)):
-                    residues = list(chains[c].get_residues())
-                    for r in range(len(residues)):
+    def get_coor(self,pdb):
+        """
+        Arguments:
+            pdb (str): pdb file to read in
+        Returns:
+            coor (arr): 3D cartesian coordinates
+            resid (arr): Residue atom names [atom_name, residue_num, chain_name, res_name]
+        """
+        structure= parser.get_structure("carb", self.data_dir + pdb)
+        coor = []
+        resid = []
+        
+        models = structure.get_models()
+        models = list(models)
+        if len(models) == 0:
+            return [],[];
+        
+        for m in range(len(models)):
+            chains = list(models[m].get_chains())
+            for c in range(len(chains)):
+                residues = list(chains[c].get_residues())
+                for r in range(len(residues)):
 
-                        res = residues[r].get_resname()
-                        if res == 'HOH':
+                    res = residues[r].get_resname()
+                    if res == 'HOH':
+                        continue;
+
+                    atoms = list(residues[r].get_atoms())
+
+                    for a in range(len(atoms)):
+                        at = atoms[a]
+
+                        if 'H' in at.get_name():
                             continue;
 
-                        atoms = list(residues[r].get_atoms())
+                        #print(str(residues[r].get_parent().id).strip())
 
-                        for a in range(len(atoms)):
-                            at = atoms[a]
-
-                            if 'H' in at.get_name():
-                                continue;
-
-                            #print(str(residues[r].get_parent().id).strip())
-
-                            coor.append( at.get_coord() )
-                            resid.append( [ str(at.get_name()), str(residues[r].id[1]).strip(), str(chains[c].id).strip(), str(residues[r].get_resname()) ] )
-                            
-                #print(len(coor))
-                return np.array(coor), resid
+                        coor.append( at.get_coord() )
+                        resid.append( [ str(at.get_name()), str(residues[r].id[1]).strip(), str(chains[c].id).strip(), str(residues[r].get_resname()) ] )
+                        
+            #print(len(coor))
+            return np.array(coor), resid
 
 
-        #enter coordinates and chain and get the polymer object instance
-        def chain_to_poly(self, my_chain,coor,res):
-            """
-            params:
-                chain (str): chain identifier
-                coor (arr n x 3): coordinates
-                res (arr n x 4): residue information of each atom (aname, resnum, chain, resname)
-            return:
-                polymer
-            """
+    #enter coordinates and chain and get the polymer object instance
+    def chain_to_poly(self, my_chain,coor,res):
+        """
+        params:
+            chain (str): chain identifier
+            coor (arr n x 3): coordinates
+            res (arr n x 4): residue information of each atom (aname, resnum, chain, resname)
+        return:
+            polymer
+        """
 
 
-            polymer = []
-            c_resnum = -1;
-            c_resname = ''
-            n = []
-            c = []
+        polymer = []
+        c_resnum = -1;
+        c_resname = ''
+        n = []
+        c = []
+        
+        
+        for i in range(len(res)):
+            ii = res[i]
+            aname = ii[0]
+            resnum = ii[1]
+            chain = ii[2]
+            resname = ii[3]
             
             
-            for i in range(len(res)):
-                ii = res[i]
-                aname = ii[0]
-                resnum = ii[1]
-                chain = ii[2]
-                resname = ii[3]
-                
-                
 
-                if c_resnum != resnum:
-                    if c_resnum != -1 and len(n) > 1:
-                        #print(str(c_resnum),c_resname,np.array(c),n)
-                        m = mono(str(c_resnum),c_resname,np.array(c),n)
-                        polymer.append(m)
-                    #reset
-                    c_resnum = resnum;
-                    c_resname = resname
-                    n = []
-                    c = []
+            if c_resnum != resnum:
+                if c_resnum != -1 and len(n) > 1:
+                    #print(str(c_resnum),c_resname,np.array(c),n)
+                    m = mono(str(c_resnum),c_resname,np.array(c),n)
+                    polymer.append(m)
+                #reset
+                c_resnum = resnum;
+                c_resname = resname
+                n = []
+                c = []
 
-                if chain == my_chain:
+            if chain == my_chain:
 
-                    n.append(aname)
-                    c.append(coor[i])
+                n.append(aname)
+                c.append(coor[i])
 
-            
-            if len(n) > 1:
-                m = mono(str(c_resnum),c_resname,np.array(c),n)
-                polymer.append(m)
+        
+        if len(n) > 1:
+            m = mono(str(c_resnum),c_resname,np.array(c),n)
+            polymer.append(m)
 
-            return poly(polymer)
+        return poly(polymer)
 
 
 class TorDataModule(pl.LightningDataModule):
     def __init__(self, data_dir: str = "../pdb_pre", full_list: str = '../../pdb_pre/tor_bois.txt',
                   batch_size: int = 32, num_workers: int = 8, pin_memory: bool = False):
         super().__init__()
+        self.full_list = full_list
         self.data_dir = data_dir
         self.batch_size = batch_size
         self.num_workers = num_workers
         self.pin_memory = pin_memory
 
-    def setup(self):
-        full_dataset = Tor_Dataset(self.data_dir)
-        self.train, self.val = random_split(
-            full_dataset, [55000, 5000], generator=torch.Generator().manual_seed(42)
+    def setup(self, stage=None):
+        full_dataset = Tor_Dataset(self.full_list,self.data_dir)
+        self.train, self.val = torch.utils.data.random_split(
+            full_dataset, [.75, .25], generator=torch.Generator().manual_seed(42)
         )
 
     def train_dataloader(self):
