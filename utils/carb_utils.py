@@ -5,7 +5,7 @@ import copy
 from scipy.spatial import distance_matrix
 from scipy.spatial.transform import Rotation as Rot
 import math
-from pyrosetta import *
+#from pyrosetta import *
 
 #A = mono(name,name3,long_name,coor,atom_names)
 class mono():
