@@ -1,0 +1,69 @@
+[[36m2024-09-10 16:15:47,093[39m][[34mpytorch_lightning.callbacks.model_summary[39m][[32mINFO[39m] -
+  | Name | Type    | Params | Mode
+-----------------------------------------
+0 | net  | Tor_Net | 8.1 M  | train
+-----------------------------------------
+8.1 M     Trainable params
+16        Non-trainable params
+8.1 M     Total params
+32.224    Total estimated model params size (MB)
+Sanity Checking DataLoader 0:   0%|                                                                                                    | 0/1 [00:00<?, ?it/s](1,) torch.Size([1, 120, 3]) (120, 4, 1)
+120
+('2',) ('G6S',) [[ 8.75  -8.343 11.059]
+ [ 8.153 -7.037 10.551]
+ [ 9.019 -6.459  9.442]
+ [10.456 -6.343  9.93 ]
+ [10.916 -7.683 10.49 ]
+ [12.346 -7.581 11.003]
+ [ 6.85  -7.254 10.061]
+ [10.535 -5.361 10.94 ]
+ [10.054 -8.087 11.532]
+ [13.16  -7.103  9.957]
+ [14.63  -6.963 10.485]
+ [15.277 -5.727  9.857]
+ [14.597 -6.83  12.008]
+ [15.436 -8.208 10.112]
+ [ 8.528 -5.186  9.093]] [('C1',), ('C2',), ('C3',), ('C4',), ('C5',), ('C6',), ('O2',), ('O4',), ('O5',), ('O6',), ('S',), ('O7',), ('O8',), ('O9',), ('O3',)]
+0.5139375329017639
+Error executing job with overrides: []
+Traceback (most recent call last):
+  File "/Users/scanner1/Downloads/capdock/src/src/run.py", line 35, in main
+    return train(config)
+  File "/Users/scanner1/Downloads/capdock/src/src/train.py", line 79, in train
+    trainer.fit(model=model, datamodule=datamodule, ckpt_path=config.ckpt_path)
+  File "/Users/scanner1/opt/anaconda3/envs/capdock/lib/python3.9/site-packages/pytorch_lightning/trainer/trainer.py", line 543, in fit
+    call._call_and_handle_interrupt(
+  File "/Users/scanner1/opt/anaconda3/envs/capdock/lib/python3.9/site-packages/pytorch_lightning/trainer/call.py", line 44, in _call_and_handle_interrupt
+    return trainer_fn(*args, **kwargs)
+  File "/Users/scanner1/opt/anaconda3/envs/capdock/lib/python3.9/site-packages/pytorch_lightning/trainer/trainer.py", line 579, in _fit_impl
+    self._run(model, ckpt_path=ckpt_path)
+  File "/Users/scanner1/opt/anaconda3/envs/capdock/lib/python3.9/site-packages/pytorch_lightning/trainer/trainer.py", line 986, in _run
+    results = self._run_stage()
+  File "/Users/scanner1/opt/anaconda3/envs/capdock/lib/python3.9/site-packages/pytorch_lightning/trainer/trainer.py", line 1028, in _run_stage
+    self._run_sanity_check()
+  File "/Users/scanner1/opt/anaconda3/envs/capdock/lib/python3.9/site-packages/pytorch_lightning/trainer/trainer.py", line 1057, in _run_sanity_check
+    val_loop.run()
+  File "/Users/scanner1/opt/anaconda3/envs/capdock/lib/python3.9/site-packages/pytorch_lightning/loops/utilities.py", line 182, in _decorator
+    return loop_run(self, *args, **kwargs)
+  File "/Users/scanner1/opt/anaconda3/envs/capdock/lib/python3.9/site-packages/pytorch_lightning/loops/evaluation_loop.py", line 135, in run
+    self._evaluation_step(batch, batch_idx, dataloader_idx, dataloader_iter)
+  File "/Users/scanner1/opt/anaconda3/envs/capdock/lib/python3.9/site-packages/pytorch_lightning/loops/evaluation_loop.py", line 396, in _evaluation_step
+    output = call._call_strategy_hook(trainer, hook_name, *step_args)
+  File "/Users/scanner1/opt/anaconda3/envs/capdock/lib/python3.9/site-packages/pytorch_lightning/trainer/call.py", line 311, in _call_strategy_hook
+    output = fn(*args, **kwargs)
+  File "/Users/scanner1/opt/anaconda3/envs/capdock/lib/python3.9/site-packages/pytorch_lightning/strategies/strategy.py", line 411, in validation_step
+    return self.lightning_module.validation_step(*args, **kwargs)
+  File "/Users/scanner1/Downloads/capdock/src/src/models/score_model.py", line 490, in validation_step
+    losses = self.step(batch, batch_idx)
+  File "/Users/scanner1/Downloads/capdock/src/src/models/score_model.py", line 466, in step
+    losses = self.loss_fn(polymer)
+  File "/Users/scanner1/Downloads/capdock/src/src/models/score_model.py", line 304, in loss_fn
+    tor_update, tor_score_gt = self.tor_diffuser.forward_marginal(t.item())
+  File "/Users/scanner1/Downloads/capdock/src/src/utils/tor_diffuser.py", line 338, in forward_marginal
+    rot_score = self.score(rot_t, t)
+  File "/Users/scanner1/Downloads/capdock/src/src/utils/tor_diffuser.py", line 286, in score
+    torch_score = self.torch_score(torch.tensor(vec), torch.tensor(t)[None])
+  File "/Users/scanner1/Downloads/capdock/src/src/utils/tor_diffuser.py", line 313, in torch_score
+    omega_scores_t = torch.gather(
+RuntimeError: Index tensor must have the same number of dimensions as input tensor
+Set the environment variable HYDRA_FULL_ERROR=1 for a complete stack trace.

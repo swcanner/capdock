@@ -300,7 +300,7 @@ class Tor_Model(pl.LightningModule):
 
             if self.perturb_tor:
                 tor_score_scale = self.tor_diffuser.score_scaling(t.item())
-                print(t.item())
+                print('tor_scale:',t.item())
                 tor_update, tor_score_gt = self.tor_diffuser.forward_marginal(t.item())
                 tor_update = torch.from_numpy(tor_update).float().to(self.device)
                 tor_score_gt = torch.from_numpy(tor_score_gt).float().to(self.device)

@@ -1,0 +1,45 @@
+{
+    "os": "macOS-12.3.1-x86_64-i386-64bit",
+    "python": "3.9.19",
+    "heartbeatAt": "2024-09-10T20:15:44.199040",
+    "startedAt": "2024-09-10T20:15:43.771416",
+    "docker": null,
+    "cuda": null,
+    "args": [],
+    "state": "running",
+    "program": "/Users/scanner1/Downloads/capdock/src/src/run.py",
+    "codePathLocal": null,
+    "codePath": "src/src/run.py",
+    "git": {
+        "remote": "git@github.com:swcanner/capdock.git",
+        "commit": "688da18efce88e42ef51551bf88d4026db17507b"
+    },
+    "email": null,
+    "root": "/Users/scanner1/Downloads/capdock",
+    "host": "Sams-iMac.local",
+    "username": "scanner1",
+    "executable": "/Users/scanner1/opt/anaconda3/envs/capdock/bin/python",
+    "cpu_count": 10,
+    "cpu_count_logical": 20,
+    "cpu_freq": {
+        "current": 3600,
+        "min": 3600,
+        "max": 3600
+    },
+    "cpu_freq_per_core": [
+        {
+            "current": 3600,
+            "min": 3600,
+            "max": 3600
+        }
+    ],
+    "disk": {
+        "/": {
+            "total": 1863.3869895935059,
+            "used": 22.166759490966797
+        }
+    },
+    "memory": {
+        "total": 64.0
+    }
+}

@@ -1,0 +1,21 @@
+[2024-09-10 16:10:52,807][utils.utils][INFO] - Disabling python warnings! <config.ignore_warnings=True>
+[2024-09-10 16:10:52,842][train][INFO] - Instantiating datamodule <utils.utils.TorDataModule>
+[2024-09-10 16:10:52,843][train][INFO] - Instantiating model <models.score_model.Tor_Model>
+[2024-09-10 16:10:53,221][utils.tor_diffuser][INFO] - Computing IGSO3. Saving in .cache/eps_1000_omega_1000_min_sigma_0_1_max_sigma_1_5_schedule_logarithmic
+[2024-09-10 16:11:36,358][train][INFO] - Instantiating callback <pytorch_lightning.callbacks.ModelCheckpoint>
+[2024-09-10 16:11:36,361][train][INFO] - Instantiating logger <pytorch_lightning.loggers.wandb.WandbLogger>
+[2024-09-10 16:11:36,505][train][INFO] - Instantiating trainer <pytorch_lightning.Trainer>
+[2024-09-10 16:11:36,574][pytorch_lightning.utilities.rank_zero][INFO] - GPU available: False, used: False
+[2024-09-10 16:11:36,575][pytorch_lightning.utilities.rank_zero][INFO] - TPU available: False, using: 0 TPU cores
+[2024-09-10 16:11:36,575][pytorch_lightning.utilities.rank_zero][INFO] - HPU available: False, using: 0 HPUs
+[2024-09-10 16:11:36,575][train][INFO] - Logging hyperparameters!
+[2024-09-10 16:11:36,575][train][INFO] - Starting training!
+[2024-09-10 16:11:41,380][pytorch_lightning.callbacks.model_summary][INFO] - 
+  | Name | Type    | Params | Mode 
+-----------------------------------------
+0 | net  | Tor_Net | 8.1 M  | train
+-----------------------------------------
+8.1 M     Trainable params
+16        Non-trainable params
+8.1 M     Total params
+32.224    Total estimated model params size (MB)
